@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <section class="h-100 h-custom" style="background-color: #8fc4b7;">
+        <div class="container py-5 h-100">
+          <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col-lg-8 col-xl-6">
+              <div class="card rounded-3">
+                <div class="card-body p-4 p-md-5">
+                  <h3 class="mb-4 pb-2 pb-md-0 mb-md-5 px-md-2">Информация об администраторе</h3>
+      
+                  <form class="px-md-2", id="form">
+      
+                    <div class="form-outline mb-2">
+                        <input type="text" id="lastName" class="form-control" required/>
+                        <label class="form-label" for="lastName">Фамилия</label>
+                    </div>
+                    <div class="form-outline mb-2">
+                      <input type="text" id="firstName" class="form-control" required/>
+                      <label class="form-label" for="firstName">Имя</label>
+                    </div>
+                    <div class="form-outline mb-2">
+                        <input type="text" id="patronymic" class="form-control" />
+                        <label class="form-label" for="patronymic">Отчество</label>
+                    </div>
+                    
+                    <div class="form-outline mb-2">
+                        <input type="text" id="tel" class="form-control", placeholder="(927) 927-97-97" type="number" required/>
+                        <label class="form-label" for="tel">Телефон</label>
+                    </div>
+
+                    <div class="form-outline mb-2">
+                        <input type="text" id="email" class="form-control" required/>
+                        <label class="form-label" for="email">Почта</label>
+                    </div>
+                    
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <div class="form-outline">
+                              <input type="text" id="tgId" class="form-control" required/>
+                              <label class="form-label" for="tgId">Telegram ID</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-outline">
+                              <input type="text" id="userName" class="form-control" placeholder="@user_name" required/>
+                              <label class="form-label" for="userName">Имя пользователя Telegram</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-outline mb-2">
+                        <input type="text" id="level" class="form-control" />
+                        <label class="form-label" for="level">Уровень подготовки</label>
+                    </div>
+                    <div class="form-group mb-4">
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                        <label for="description">Дополнительное описание</label>
+                    </div>
+      
+                    <button type="submit" class="btn btn-success btn-lg mb-1" id="submit">Submit</button>
+      
+                  </form>
+      
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </section>
+    
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+
+        let initData = Telegram.WebApp.initData || '';
+        let initDataUnsafe = Telegram.WebApp.initDataUnsafe || {};
+
+        function setInputFilter(textbox, inputFilter, errMsg) {
+            ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop", "focusout"].forEach(function(event) {
+                textbox.addEventListener(event, function(e) {
+                    if (inputFilter(this.value)) {
+                        // Accepted value
+                        if (["keydown","mousedown","focusout"].indexOf(e.type) >= 0){
+                            this.classList.remove("input-error");
+                            this.setCustomValidity("");
+                        }
+                        this.oldValue = this.value;
+                        this.oldSelectionStart = this.selectionStart;
+                        this.oldSelectionEnd = this.selectionEnd;
+                    } else if (this.hasOwnProperty("oldValue")) {
+                        // Rejected value - restore the previous one
+                        this.classList.add("input-error");
+                        this.setCustomValidity(errMsg);
+                        this.reportValidity();
+                        this.value = this.oldValue;
+                        this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+                    } else {
+                        // Rejected value - nothing to restore
+                        this.value = "";
+                    }
+                });
+            });
+        }
+
+        setInputFilter(document.getElementById("tel"), function(value) { return /^\d*$/.test(value); }, "Only digits");
+        setInputFilter(document.getElementById("tgId"), function(value) { return /^\d*$/.test(value); }, "Only digits");
+        
+        const formElem = document.getElementById('form');
+        
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+        });
+
+        formElem.onsubmit = async (e) => {
+            e.preventDefault();
+            $.ajax('/administrator/register', {
+                method: 'POST',
+                data: {
+                    _auth: initData,
+                    firstName: formElem.firstName.value,
+                    lastName: formElem.lastName.value,
+                    patronymic: formElem.patronymic.value,
+                    tel: formElem.tel.value,
+                    email: formElem.email.value,
+                    tgId: formElem.tgId.value,
+                    userName: formElem.userName.value,
+                    level: formElem.level.value,
+                    description: formElem.description.value,
+                    msgId: params.msg_id
+                },
+                dataType: 'json',
+                success: function (result) {
+                    Telegram.WebApp.close();
+                },
+                error: function (jqXHR) {
+                    if (jqXHR.status === 400) {
+                        alert('Проверьте правильность ввода полей!')
+                    } else if (jqXHR.status != 200) {
+                        alert('Ошибка!')
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>
