@@ -51,7 +51,6 @@ services:
     container_name: "${BOT_NAME:-migr}"
     build:
       context: .
-    image: "groosha/telegram-bombsweeper-bot:latest"
     restart: "on-failure"
     command: sh -c "python -m alembic upgrade head"
     networks:
