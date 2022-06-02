@@ -3,12 +3,12 @@ version: '3.3'
 services:
   bot:
     env_file: .env
-    container_name: "${BOT_NAME:-bot}"
+    container_name: "${BOT_NAME}-bot"
     build:
       context: .
-    working_dir: "/usr/src/app/${BOT_NAME:-bot}"
+    working_dir: "/usr/src/app/${BOT_NAME}-bot"
     volumes:
-    - .:/usr/src/app/${BOT_NAME:-bot}
+    - .:/usr/src/app/${BOT_NAME}-bot
     command: python -m app
     restart: unless-stopped
     networks:
@@ -20,7 +20,7 @@ services:
   redis:
     env_file: .env
     image: redis:7.0-rc-alpine
-    container_name: "${BOT_NAME:-redis}"
+    container_name: "${BOT_NAME}-redis"
     volumes:
       - "./redis.conf:/usr/local/etc/redis"
       - "./redis/data:/data"
@@ -33,7 +33,7 @@ services:
   database:
     env_file: .env
     image: "postgres:14.2-alpine"
-    container_name: "${BOT_NAME:-db}"
+    container_name: "${BOT_NAME}-db"
     volumes:
       - "./pg/data:/var/lib/postgresql/data"
       - "./pg/init:/docker-entrypoint-initdb.d"
@@ -48,7 +48,7 @@ services:
       - botnet
   db_migration:
     env_file: .env
-    container_name: "${BOT_NAME:-migr}"
+    container_name: "${BOT_NAME}-migr"
     build:
       context: .
     restart: "on-failure"
