@@ -1,17 +1,19 @@
 from typing import Iterable
 
-from sqlalchemy import BigInteger, Column, ForeignKey, Integer, String, DateTime
+from app.services.database.base import AccessMixin, Base, TimeStampMixin
+from sqlalchemy import (BigInteger, Column, DateTime, ForeignKey, Integer,
+                        String)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-
-from app.services.database.base import AccessMixin, TimeStampMixin, Base
 
 
 class Administrator(Base, TimeStampMixin, AccessMixin):
     __tablename__ = 'administrators'
     
     id = Column(BigInteger, primary_key=True)
-    full_name = Column(String, nullable=False)
+    first_name = Column(String)
+    last_name = Column(String)
+    patronymic = Column(String)
     email = Column(String, nullable=False)
     user_name = Column(String, nullable=False)
     tel = Column(BigInteger)
@@ -43,8 +45,10 @@ class Teacher(Base, TimeStampMixin, AccessMixin):
     __tablename__ = 'teachers'
     
     id = Column(BigInteger, primary_key=True)
-    admin_id = Column(BigInteger, ForeignKey('administrators.id'), nullable=False)
-    full_name = Column(String, nullable=False)
+    admin_id = Column(BigInteger, ForeignKey('administrators.id'))
+    first_name = Column(String)
+    last_name = Column(String)
+    patronymic = Column(String)
     email = Column(String, nullable=False)
     user_name = Column(String, nullable=False)
     tel = Column(BigInteger)
@@ -70,8 +74,10 @@ class Student(Base, TimeStampMixin, AccessMixin):
     __tablename__ = 'students'
     
     id = Column(BigInteger, primary_key=True)
-    admin_id = Column(BigInteger, ForeignKey('administrators.id'), nullable=False)
-    full_name = Column(String, nullable=False)
+    admin_id = Column(BigInteger, ForeignKey('administrators.id'))
+    first_name = Column(String)
+    last_name = Column(String)
+    patronymic = Column(String)
     email = Column(String, nullable=False)
     user_name = Column(String, nullable=False)
     tel = Column(BigInteger)
@@ -89,11 +95,12 @@ class Student(Base, TimeStampMixin, AccessMixin):
         uselist=True,
         back_populates='student'
     )
-    sections: Iterable['Section'] = relationship(
-        'Section',
-        lazy='selectin',
+    groups: Iterable['Group'] = relationship(
+        'Group',
+        lazy='joined',
         uselist=True,
-        back_populates='student'
+        secondary='sections',
+        viewonly=True
     )
     home_works: Iterable['Section'] = relationship(
         'HomeWork',
@@ -107,7 +114,9 @@ class Parent(Base, TimeStampMixin):
     __tablename__ = 'parents'
     
     id = Column(BigInteger, primary_key=True)
-    full_name = Column(String, nullable=False)
+    first_name = Column(String)
+    last_name = Column(String)
+    patronymic = Column(String)
     tel = Column(BigInteger)
     
     childrens: Iterable['Family'] = relationship(
@@ -122,8 +131,8 @@ class Family(Base, TimeStampMixin):
     __tablename__ = 'families'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    student_id = Column(BigInteger, ForeignKey('students.id'), nullable=False)
-    parent_id = Column(BigInteger, ForeignKey('parents.id'), nullable=False)
+    student_id = Column(BigInteger, ForeignKey('students.id', ondelete='CASCADE'), nullable=False)
+    parent_id = Column(BigInteger, ForeignKey('parents.id', ondelete='CASCADE'), nullable=False)
     
     student = relationship(
         'Student',
@@ -135,7 +144,7 @@ class Family(Base, TimeStampMixin):
         'Parent', 
         lazy='selectin',
         uselist=False, back_populates='childrens'
-    )    
+    )
 
 
 class Group(Base, TimeStampMixin, AccessMixin):
@@ -156,13 +165,15 @@ class Group(Base, TimeStampMixin, AccessMixin):
     teacher: 'Teacher' = relationship(
         'Teacher',
         lazy='selectin',
-        uselist=False, back_populates='groups'
+        uselist=False, 
+        back_populates='groups'
     )
-    sections: Iterable['Section'] = relationship(
-        'Section',
-        lazy='selectin',
+    students: Iterable['Student'] = relationship(
+        'Student',
+        lazy='joined',
         uselist=True,
-        back_populates='group'
+        secondary='sections',
+        viewonly=True
     )
     home_tasks: Iterable['HomeTask'] = relationship(
         'HomeTask',
@@ -181,15 +192,15 @@ class Section(Base, TimeStampMixin):
     
     group: 'Group' = relationship(
         'Group',
-        lazy='selectin',
-        uselist=False, 
-        back_populates='sections'
+        lazy='joined',
+        uselist=False,
+        viewonly=True 
     )
     student: 'Student' = relationship(
         'Student',
-        lazy='selectin',
+        lazy='joined',
         uselist=False,
-        back_populates='sections'
+        viewonly=True
     )
 
 

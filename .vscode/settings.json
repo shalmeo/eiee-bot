@@ -1,5 +1,7 @@
 {
     "python.linting.mypyEnabled": false,
     "python.linting.enabled": false,
-    "python.linting.flake8Enabled": true
+    "python.linting.flake8Enabled": true,
+    "liveServer.settings.port": 5501,
+    "python.formatting.provider": "black"
 }

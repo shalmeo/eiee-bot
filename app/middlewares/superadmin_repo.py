@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Any, Awaitable
+from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
 from aiogram.types import Update
@@ -13,6 +13,6 @@ class SuperAdminRepoMiddleware(BaseMiddleware):
         event: Update,
         data: Dict[str, Any],
     ) -> Any:
-        session = data['session']
-        data['superadmin_repo'] = SuperAdminRepo(session)
+        session = data["session"]
+        data["superadmin_repo"] = SuperAdminRepo(session)
         return await handler(event, data)

@@ -1,7 +1,6 @@
-from sqlalchemy import Column, TIMESTAMP, func, DateTime
+from sqlalchemy import TIMESTAMP, Column, DateTime, func
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm.decl_api import declarative_mixin
-
 
 Base = declarative_base()
 
@@ -16,7 +15,6 @@ class TimeStampMixin:
 @declarative_mixin
 class AccessMixin:
     __abstract__ = True
-    
+
     access_start = Column(DateTime, nullable=False)
     access_end = Column(DateTime, nullable=False)
-    

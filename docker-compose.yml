@@ -11,6 +11,8 @@ services:
     - .:/usr/src/app/${BOT_NAME}-bot
     command: python -m app
     restart: unless-stopped
+    ports:
+      - 5500:5500
     networks:
       - botnet
     depends_on:
