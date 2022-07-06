@@ -7,10 +7,12 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config_reader import Settings
 from app.keyboards.superadmin.inline.registryof_teachers import get_teacher_info_kb
+from app.misc.delete_message import delete_last_message
 from app.misc.exceptions import RegisterFormValidateError
 from app.misc.parse import parse_teacher_register_data
 from app.misc.text import get_teacher_info_text
 from app.services.database.models import Teacher
+from app.services.database.repositories.default import DefaultRepo
 from app.services.database.repositories.superadmin import SuperAdminRepo
 
 
@@ -39,13 +41,14 @@ async def teacher_register(request: Request):
         return json_response({"ok": False, "error": "Validation error"}, status=400)
 
     async with session_factory() as session:
-        repo = SuperAdminRepo(session)
-        if await repo.get(Teacher, form.tg_id):
+        admin_repo = SuperAdminRepo(session, init_data.user.id)
+        repo = DefaultRepo(session)
+        if await repo.get_teacher(form.tg_id):
             return json_response(
                 {"ok": False, "error": "User already exists"}, status=409
             )
 
-        teacher = repo.add_new_teacher(form)
+        teacher = admin_repo.add_new_teacher(form)
         await session.commit()
 
     await _send_info(bot, init_data.user.id, teacher, form.msg_id)
@@ -61,4 +64,5 @@ async def _send_info(
 ) -> None:
     text = get_teacher_info_text(teacher)
     markup = get_teacher_info_kb()
-    await bot.edit_message_text(text, user_id, msg_id, reply_markup=markup)
+    await delete_last_message(bot, user_id, msg_id)
+    await bot.send_message(user_id, text, reply_markup=markup)

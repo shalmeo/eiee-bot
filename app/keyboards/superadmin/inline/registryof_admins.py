@@ -72,10 +72,17 @@ def get_registryof_admins_kb(
     return builder.as_markup()
 
 
-def get_admin_info_kb() -> InlineKeyboardMarkup:
+def get_admin_info_kb(
+    config: Settings, mid: int, admin_id: int
+) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton(text="Изменить запись", callback_data="some"),
+            InlineKeyboardButton(
+                text="Изменить запись",
+                web_app=WebAppInfo(
+                    url=f"https://{config.webhook.host}/administrator/change-info?mid={mid}&id={admin_id}"
+                ),
+            ),
         ],
         [
             InlineKeyboardButton(

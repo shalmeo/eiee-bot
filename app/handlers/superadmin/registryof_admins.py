@@ -1,7 +1,6 @@
-import dataclass_factory
-
 from contextlib import suppress
 
+import dataclass_factory
 from aiogram import Bot, F, Router
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
@@ -10,6 +9,13 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config_reader import Settings
+from app.misc.delete_message import delete_last_message
+from app.misc.models import AdminModel
+from app.misc.text import get_admin_info_text
+from app.services.database.models import Administrator
+from app.services.database.repositories.default import DefaultRepo
+from app.services.database.repositories.superadmin import SuperAdminRepo
+from app.services.excel.read_registryof_admins import parse_registryof_admins_excel
 from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory, Registry
 from app.keyboards.superadmin.inline.registryof_admins import (
     AdminCallbackFactory,
@@ -21,13 +27,6 @@ from app.keyboards.superadmin.inline.registryof_admins import (
     get_read_excel_kb,
     get_registryof_admins_kb,
 )
-from app.misc.delete_message import delete_last_message
-from app.misc.models import AdminModel
-from app.misc.text import get_admin_info_text
-from app.services.database.models import Administrator
-from app.services.database.repositories.default import DefaultRepo
-from app.services.database.repositories.superadmin import SuperAdminRepo
-from app.services.excel.read_registryof_admins import parse_registryof_admins_excel
 
 router = Router()
 
@@ -42,9 +41,9 @@ async def on_registryof_admins(
     repo: DefaultRepo,
     config: Settings,
 ):
-    offset = (await state.get_data()).get("offset") or 0
+    offset = (await state.get_data()).get("offset", 0)
 
-    admins, offset, limit = await superadmin_repo.get_registry(Administrator, offset)
+    admins, limit = await superadmin_repo.get_admins(offset)
     count = await repo.get_count(Administrator)
     markup = get_registryof_admins_kb(
         admins,
@@ -64,12 +63,13 @@ async def on_registryof_admins(
 @router.callback_query(AdminCallbackFactory.filter())
 async def on_admin_info(
     call: CallbackQuery,
-    superadmin_repo: SuperAdminRepo,
     callback_data: AdminCallbackFactory,
+    repo: DefaultRepo,
+    config: Settings,
 ):
-    admin = await superadmin_repo.get(Administrator, callback_data.admin_id)
+    admin = await repo.get(Administrator, callback_data.admin_id)
     text = get_admin_info_text(admin)
-    markup = get_admin_info_kb()
+    markup = get_admin_info_kb(config, call.message.message_id, callback_data.admin_id)
     await call.message.edit_text(text, reply_markup=markup)
     await call.answer()
 
@@ -110,6 +110,7 @@ async def on_load_admins(
     call: CallbackQuery,
     state: FSMContext,
     superadmin_repo: SuperAdminRepo,
+    repo: DefaultRepo,
     session: AsyncSession,
 ):
     factory = dataclass_factory.Factory()
@@ -117,11 +118,11 @@ async def on_load_admins(
     count = 0
     for a in admins:
         admin = factory.load(a, AdminModel)
-        admin_exists = await superadmin_repo.get(Administrator, admin.tg_id)
+        admin_exists = await repo.get(Administrator, admin.tg_id)
         if admin_exists:
             continue
 
-        superadmin_repo.add_new_admin()
+        superadmin_repo.add_new_admin(admin)
         count += 1
 
     await session.commit()

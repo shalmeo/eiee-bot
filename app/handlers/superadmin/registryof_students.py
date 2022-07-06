@@ -64,10 +64,10 @@ async def on_registryof_students(
 @router.callback_query(StudentCallbackFactory.filter())
 async def on_student_info(
     call: CallbackQuery,
-    superadmin_repo: SuperAdminRepo,
+    repo: DefaultRepo,
     callback_data: StudentCallbackFactory,
 ):
-    student = await superadmin_repo.get(Student, callback_data.student_id)
+    student = await repo.get(Student, callback_data.student_id)
     text = get_student_info_text(student)
     markup = get_student_info_kb()
     await call.message.edit_text(text, reply_markup=markup)
@@ -113,6 +113,7 @@ async def on_load_students(
     call: CallbackQuery,
     state: FSMContext,
     superadmin_repo: SuperAdminRepo,
+    repo: DefaultRepo,
     session: AsyncSession,
 ):
     factory = dataclass_factory.Factory()
@@ -120,12 +121,12 @@ async def on_load_students(
     count = 0
     for s in students:
         student = factory.load(s, StudentModel)
-        student_exists = await superadmin_repo.get(Student, student.tg_id)
+        student_exists = await repo.get(Student, student.tg_id)
         if student_exists:
             continue
         superadmin_repo.add_new_student(student)
         for p in student.parents:
-            if not await superadmin_repo.get(Parent, p.tg_id):
+            if not await repo.get(Parent, p.tg_id):
                 superadmin_repo.add_new_parent(p)
 
             superadmin_repo.add_new_family(student.tg_id, p.tg_id)

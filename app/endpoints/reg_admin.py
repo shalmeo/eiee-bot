@@ -7,10 +7,12 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config_reader import Settings
 from app.keyboards.superadmin.inline.registryof_admins import get_admin_info_kb
+from app.misc.delete_message import delete_last_message
 from app.misc.exceptions import RegisterFormValidateError
 from app.misc.parse import parse_admin_register_data
 from app.misc.text import get_admin_info_text
 from app.services.database.models import Administrator
+from app.services.database.repositories.default import DefaultRepo
 from app.services.database.repositories.superadmin import SuperAdminRepo
 
 
@@ -39,13 +41,14 @@ async def admin_register(request: Request):
         return json_response({"ok": False, "error": "Validation error"}, status=400)
 
     async with session_factory() as session:
-        repo = SuperAdminRepo(session)
-        if await repo.get(Administrator, form.tg_id):
+        admin_repo = SuperAdminRepo(session, init_data.user.id)
+        repo = DefaultRepo(session)
+        if await repo.get_admin(form.tg_id):
             return json_response(
                 {"ok": False, "error": "User already exists"}, status=409
             )
 
-        admin = repo.add_new_admin(form)
+        admin = admin_repo.add_new_admin(form)
         await session.commit()
 
     await _send_info(bot, init_data.user.id, admin, form.msg_id)
@@ -56,4 +59,5 @@ async def admin_register(request: Request):
 async def _send_info(bot: Bot, user_id: int, admin: Administrator, msg_id: int) -> None:
     text = get_admin_info_text(admin)
     markup = get_admin_info_kb()
-    await bot.edit_message_text(text, user_id, msg_id, reply_markup=markup)
+    await delete_last_message(bot, user_id, msg_id)
+    await bot.send_message(user_id, text, reply_markup=markup)

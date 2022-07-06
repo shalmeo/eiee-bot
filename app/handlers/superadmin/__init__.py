@@ -1,12 +1,13 @@
 from aiogram import Router
 
 from app.handlers.superadmin import (
-    start,
     profile,
     registryof_admins,
-    registryof_teachers,
+    registryof_groups,
     registryof_students,
-    registryof_groups
+    registryof_teachers,
+    unreg_users,
+    start,
 )
 
 
@@ -17,6 +18,7 @@ def setup(router: Router) -> None:
         registryof_teachers,
         registryof_students,
         registryof_groups,
-        start
+        unreg_users,
+        start,
     ):
         router.include_router(module.router)

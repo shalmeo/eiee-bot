@@ -1,7 +1,7 @@
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
-from aiogram.types import Update
+from aiogram.types import Message, CallbackQuery, Update
 from sqlalchemy.orm import sessionmaker
 
 
@@ -12,7 +12,7 @@ class DbSessionMiddleware(BaseMiddleware):
     async def __call__(
         self,
         handler: Callable[[Update, Dict[str, Any]], Awaitable[Any]],
-        event: Update,
+        event: Message | CallbackQuery,
         data: Dict[str, Any],
     ) -> Any:
         async with self.session_maker() as session:

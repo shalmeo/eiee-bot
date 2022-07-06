@@ -35,7 +35,7 @@ async def on_registryof_teachers(
     offset = (await state.get_data()).get('offset') or 0
     
     teachers, offset, limit = await admin_repo.get_registry(Teacher, event_from_user.id, offset)
-    count = await admin_repo.get_count(Teacher, event_from_user.id)
+    count = await repo.get_count(Teacher, Teacher.admin_id == event_from_user.id)
     markup = get_registryof_teachers_kb(
         teachers,
         config,
@@ -51,10 +51,10 @@ async def on_registryof_teachers(
 @router.callback_query(TeacherCallbackFactory.filter())
 async def on_teacher_info(
     call: CallbackQuery,
-    admin_repo: AdminRepo,
+    repo: DefaultRepo,
     callback_data: TeacherCallbackFactory,
 ):
-    teacher = await admin_repo.get(Teacher, callback_data.teacher_id)
+    teacher = await repo.get(Teacher, callback_data.teacher_id)
     text = get_teacher_info_text(teacher)
     markup = get_teacher_info_kb()
     await call.message.edit_text(text, reply_markup=markup)
@@ -64,11 +64,12 @@ async def on_teacher_info(
 @router.callback_query(TeacherPageController.filter())
 async def page_controller(
     call: CallbackQuery,
-    admin_repo: AdminRepo,
-    config: Settings,
-    state: FSMContext,
     callback_data: TeacherPageController,
-    event_from_user: User
+    event_from_user: User,
+    state: FSMContext,
+    admin_repo: AdminRepo,
+    repo: DefaultRepo,
+    config: Settings,
 ):
     try:
         teachers, offset, limit = await admin_repo.get_registry(
@@ -80,7 +81,7 @@ async def page_controller(
         await call.answer()
         return
     
-    count = await admin_repo.get_count(Teacher, event_from_user.id)
+    count = await repo.get_count(Teacher, Teacher.admin_id == event_from_user.id)
     
     pages = count // limit + bool(count % limit)
     current_page = offset // limit + 1

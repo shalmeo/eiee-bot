@@ -1,6 +1,7 @@
 from aiogram import Dispatcher, Router
 
 from app.filters.admin.default import DefaultAdminFilter
+from app.filters.guest.default import DefaultGuestFilter
 from app.filters.student.default import DefaultStudentFilter
 from app.filters.superadmin.default import DefaultSuperAdminFilter
 from app.filters.teacher.default import DefaultTeacherFilter
@@ -37,6 +38,15 @@ def create_student_router(dispatcher: Dispatcher) -> Router:
     router = Router()
     router.message.filter(DefaultStudentFilter())
     router.callback_query.filter(DefaultStudentFilter())
+    dispatcher.include_router(router)
+
+    return router
+
+
+def create_guest_router(dispatcher: Dispatcher) -> Router:
+    router = Router()
+    router.message.filter(DefaultGuestFilter())
+    router.callback_query.filter(DefaultGuestFilter())
     dispatcher.include_router(router)
 
     return router

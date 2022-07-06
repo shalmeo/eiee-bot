@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Домашнее задание</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+        crossorigin="anonymous"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <section class="h-100 h-custom" style="background-color: #8fc4b7;">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-lg-8 col-xl-6">
+                    <div class="card rounded-3">
+                        <div class="card-body p-4 p-md-5">
+                            <h3 class="mb-4 pb-2 pb-md-0 mb-md-5 px-md-2">Создание домашнего задания</h3>
+
+                            <form class="px-md-2" id="form">
+                                <div class="col-auto mb-4">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">№</div>
+                                        </div>
+                                        <input type="text" class="form-control" id="homeTaskNumber" required />
+                                    </div>
+                                    <label class="sr-only required" for="homeTaskNumber">Номер Д/З (наименование)</label>
+                                </div>
+
+                                <div class="form-group mb-2">
+                                    <input type="date" class="form-control" id="lessonDate" />
+                                    <label class="required" for="lessonDate">Укажите дату проведенного урока</label>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <input type="datetime-local" class="form-control" id="deadLine" required />
+                                    <label class="required" for="deadLine">Укажите дату и время крайней сдачи Д/З (по
+                                        МСК)</label>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <textarea class="form-control" id="description"
+                                        rows="3">Д/З на последней странице презентации</textarea>
+                                    <label for="description">Описание по Д/З</label>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <style>
+        .required:after {
+            content: " *";
+            color: red;
+        }
+    </style>
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+
+        const form = document.getElementById('form');
+        const params = new Proxy(
+            new URLSearchParams(window.location.search),
+            { get: (searchParams, prop) => searchParams.get(prop) }
+        );
+
+        const initData = Telegram.WebApp.initData || '';
+        const MainButton = Telegram.WebApp.MainButton
+
+        MainButton.setText('Отправить домашнее задание').show()
+
+        MainButton.onClick(() => {
+            try {
+                $.ajax('/teacher/create-home-task', {
+                    method: 'POST',
+                    data: {
+                        _auth: initData,
+                        msgId: params.msg_id,
+                        groupUuid: params.group_uuid,
+                        homeTaskNumber: form.homeTaskNumber.value,
+                        lessonDate: form.lessonDate.value,
+                        deadLine: form.deadLine.value,
+                        description: form.description.value,
+                    },
+                    dataType: 'json',
+                    success: function (result) {
+                        Telegram.WebApp.close();
+                    },
+                    error: function (jqXHR) {
+                        if (jqXHR.status === 400) {
+                            alert('Проверьте правильность ввода полей!')
+                        } else {
+                            alert('Ошибка!')
+                        }
+                    }
+                });
+            } catch (err) {
+                alert(err)
+            }
+        });
+    </script>
+</body>

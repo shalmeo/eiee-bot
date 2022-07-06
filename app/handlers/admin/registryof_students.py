@@ -10,6 +10,7 @@ from app.config_reader import Settings
 from app.misc.text import get_student_info_text
 from app.services.database.models import Student
 from app.services.database.repositories.admin import AdminRepo
+from app.services.database.repositories.default import DefaultRepo
 from app.keyboards.admin.inline.profile import ProfileCallbackFactory, Registry
 from app.keyboards.admin.inline.registryof_students import (
     StudentCallbackFactory,
@@ -17,7 +18,6 @@ from app.keyboards.admin.inline.registryof_students import (
     get_registryof_students_kb,
     get_student_info_kb
 )
-from app.services.database.repositories.default import DefaultRepo
 
 
 router = Router()
@@ -54,10 +54,10 @@ async def on_registryof_students(
 @router.callback_query(StudentCallbackFactory.filter())
 async def on_student_info(
     call: CallbackQuery,
-    admin_repo: AdminRepo,
+    repo: DefaultRepo,
     callback_data: StudentCallbackFactory,
 ):
-    student = await admin_repo.get(Student, callback_data.student_id)
+    student = await repo.get(Student, callback_data.student_id)
     text = get_student_info_text(student)
     markup = get_student_info_kb()
     await call.message.edit_text(text, reply_markup=markup)

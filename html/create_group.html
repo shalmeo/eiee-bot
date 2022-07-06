@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Группа</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <link href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+        crossorigin="anonymous"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
+</head>
+<body>
+    <section class="h-100 h-custom" style="background-color: #8fc4b7;">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-lg-8 col-xl-6">
+                    <div class="card rounded-3">
+                        <div class="card-body p-4 p-md-5">
+                            <h3 class="mb-4 pb-2 pb-md-0 mb-md-5 px-md-2">Создание группы</h3>
+
+                            <form class="px-md-2" id="form">
+                                <div class="form-outline mb-2">
+                                    <input type="text" id="title" class="form-control" required />
+                                    <label class="form-label required" for="title">Название группы</label>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <textarea class="form-control" id="description" rows="3"></textarea>
+                                    <label for="description">Описание группы</label>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <input id="teacher" class="form-control" type="text" value="Выберите учителя" disabled readonly>
+                                    <label class="required" for="teacher">Учитель</label>
+                                </div>
+
+                                <table id="table" class="table table-bordered table-condensed table-striped table-hover mt-4" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Учитель</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="teachers">
+                                    </tbody>
+                                </table>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <style>
+        .required:after {
+            content: " *";
+            color: red;
+        }
+        .row_selected {
+            background-color: #81bccb;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button
+        {
+            min-width: 0.2em; !important
+        }
+    </style>
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+
+        const form = document.getElementById("form");
+        const params = new Proxy(
+            new URLSearchParams(window.location.search),
+            { get: (searchParams, prop) => searchParams.get(prop) }
+        );
+
+        const initData = Telegram.WebApp.initData || "";
+
+        $.ajax('/teachers', {
+            method: 'POST',
+            data: {
+                _auth: initData,
+            },
+            dataType: 'json',
+            success: function (result) {
+                $(document).ready(() => {
+                    $.fn.DataTable.ext.pager.numbers_length = 5;
+                    const table = $("#table").DataTable({
+                        data: result.data,
+                        select: true,
+                        bLengthChange: false,
+                        bFilter: true,
+                        bInfo: false,
+                        pageLength: 10,
+                        language: {
+                            paginate: {
+                                previous:   "←",
+                                next:   "→",
+                            }
+                        },
+                        "sDom": '<"row view-filter"<"col-sm-12"<"pull-left"l><"pull-right"f><"clearfix">>>t<"row view-pager"<"col-sm-12"<"text-center"ip>>>'
+                    });
+                    $('#table tbody').on( 'click', 'tr', function (e) {
+                        let data = table.row($(this)).data()
+                        document.getElementById("teacher").value = data[0] + " | " + data[1];
+                        if ( $(this).hasClass('row_selected') ) {
+                            $(this).removeClass('row_selected');
+                        } else {
+                            table.$('tr.row_selected').removeClass('row_selected');
+                            $(this).addClass('row_selected');
+
+                        }
+                    });
+                });
+            },
+            error: function (response) {
+                alert("Ошибка")
+            }
+        });
+
+        const MainButton = Telegram.WebApp.MainButton;
+
+        MainButton.setText('Создать группу').show();
+        MainButton.onClick(() => {
+            try {
+                $.ajax('/group/create', {
+                    method: 'POST',
+                    data: {
+                        _auth: initData,
+                        msgId: params.msg_id,
+                        title: form.title.value,
+                        description: form.description.value,
+                        teacher: form.teacher.value
+                    },
+                    dataType: 'json',
+                    success: (result) => {
+                        Telegram.WebApp.close();
+                    },
+                    error: (response) => {
+                        if (response.status === 400) {
+                            alert('Проверьте правильность ввода полей!')
+                        } else {
+                            alert('Ошибка!')
+                        }
+                    }
+                });
+            } catch (e) {
+                alert(e)
+            }
+        });
+    </script>
+</body>

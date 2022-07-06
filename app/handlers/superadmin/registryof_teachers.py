@@ -5,12 +5,19 @@ import dataclass_factory
 from aiogram import Bot, F, Router
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, User
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config_reader import Settings
 from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory, Registry
+from app.misc.delete_message import delete_last_message
+from app.misc.models import TeacherModel
+from app.misc.text import get_teacher_info_text
+from app.services.database.models import Teacher
+from app.services.database.repositories.default import DefaultRepo
+from app.services.database.repositories.superadmin import SuperAdminRepo
+from app.services.excel.read_registryof_teachers import parse_registryof_teachers_excel
 from app.keyboards.superadmin.inline.registryof_teachers import (
     CreateRecordofTeacher,
     TeacherCallbackFactory,
@@ -20,14 +27,8 @@ from app.keyboards.superadmin.inline.registryof_teachers import (
     get_read_excel_kb,
     get_registryof_teachers_kb,
     get_teacher_info_kb,
+    TeacherAction,
 )
-from app.misc.delete_message import delete_last_message
-from app.misc.models import TeacherModel
-from app.misc.text import get_teacher_info_text
-from app.services.database.models import Teacher
-from app.services.database.repositories.default import DefaultRepo
-from app.services.database.repositories.superadmin import SuperAdminRepo
-from app.services.excel.read_registryof_teachers import parse_registryof_teachers_excel
 
 router = Router()
 
@@ -61,15 +62,20 @@ async def on_registryof_teachers(
     await state.update_data(offset=offset)
 
 
-@router.callback_query(TeacherCallbackFactory.filter())
+@router.callback_query(TeacherCallbackFactory.filter(F.action == TeacherAction.INFO))
 async def on_teacher_info(
     call: CallbackQuery,
-    superadmin_repo: SuperAdminRepo,
     callback_data: TeacherCallbackFactory,
+    event_from_user: User,
+    repo: DefaultRepo,
+    config: Settings,
 ):
-    teacher = await superadmin_repo.get(Teacher, callback_data.teacher_id)
-    text = get_teacher_info_text(teacher, with_creator=True)
-    markup = get_teacher_info_kb()
+    teacher = await repo.get(Teacher, callback_data.teacher_id)
+    with_creator = teacher.admin.telegram_id != event_from_user.id
+    text = get_teacher_info_text(teacher, with_creator=with_creator)
+    markup = get_teacher_info_kb(
+        config, call.message.message_id, callback_data.teacher_id
+    )
     await call.message.edit_text(text, reply_markup=markup)
     await call.answer()
 
@@ -112,6 +118,7 @@ async def on_load_teachers(
     call: CallbackQuery,
     state: FSMContext,
     superadmin_repo: SuperAdminRepo,
+    repo: DefaultRepo,
     session: AsyncSession,
 ):
     factory = dataclass_factory.Factory()
@@ -119,8 +126,8 @@ async def on_load_teachers(
     count = 0
     for t in teachers:
         teacher = factory.load(t, TeacherModel)
-        teacher_exists = await superadmin_repo.get(Teacher, teacher.tg_id)
-        if teacher_exists:
+        get_teacher = await repo.get(Teacher, teacher.tg_id)
+        if get_teacher:
             continue
 
         superadmin_repo.add_new_teacher(teacher)

@@ -7,12 +7,13 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config_reader import Settings
 from app.keyboards.superadmin.inline.registryof_students import get_student_info_kb
+from app.misc.delete_message import delete_last_message
 from app.misc.exceptions import RegisterFormValidateError
 from app.misc.parse import parse_student_register_data
 from app.misc.text import get_student_info_text
 from app.services.database.models import Parent, Student
+from app.services.database.repositories.default import DefaultRepo
 from app.services.database.repositories.superadmin import SuperAdminRepo
-
 
 
 # GET /student/reg-form
@@ -40,19 +41,22 @@ async def student_register(request: Request):
         return json_response({"ok": False, "error": "Validation error"}, status=400)
 
     async with session_factory() as session:
-        repo = SuperAdminRepo(session)
-        if await repo.get(Student, form.tg_id):
+        admin_repo = SuperAdminRepo(session, init_data.user.id)
+        repo = DefaultRepo(session)
+        if await repo.get_student(form.tg_id):
             return json_response(
                 {"ok": False, "error": "User already exists"}, status=409
             )
 
-        student = repo.add_new_student(form)
+        student = admin_repo.add_new_student(form)
 
         for p in form.parents:
+            if not p:
+                continue
             if not await repo.get(Parent, p.tg_id):
-                parent = repo.add_new_parent(p)
+                admin_repo.add_new_parent(p)
 
-            repo.add_new_family(student.id, parent.id)
+            admin_repo.add_new_family(student.id, p.tg_id)
 
         await session.commit()
 
@@ -64,4 +68,5 @@ async def student_register(request: Request):
 async def _send_info(bot: Bot, user_id: int, student: Student, msg_id: int):
     text = get_student_info_text(student)
     markup = get_student_info_kb()
-    await bot.edit_message_text(text, user_id, msg_id, reply_markup=markup)
+    await delete_last_message(bot, user_id, msg_id)
+    await bot.send_message(user_id, text, reply_markup=markup)

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+        crossorigin="anonymous"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/imask"></script>
+</head>
+
+<body>
+    <section class="h-100 h-custom" style="background-color: #8fc4b7;">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-lg-8 col-xl-6">
+                    <div class="card rounded-3">
+                        <div class="card-body p-4 p-md-5">
+                            <h3 class="mb-4 pb-2 pb-md-0 mb-md-5 px-md-2">Информацияqq об администраторe</h3>
+
+                            <form class="px-md-2" id="form">
+                                <div class="form-outline mb-2">
+                                    <input type="text" id="lastName" class="form-control" required />
+                                    <label class="form-label required" for="lastName">Фамилия</label>
+                                </div>
+                                <div class="form-outline mb-2">
+                                    <input type="text" id="firstName" class="form-control" required />
+                                    <label class="form-label required" for="firstName">Имя</label>
+                                </div>
+                                <div class="form-outline mb-2">
+                                    <input type="text" id="patronymic" class="form-control" required/>
+                                    <label class="form-label required" for="patronymic">Отчество</label>
+                                </div>
+
+                                <div class="form-outline mb-2">
+                                    <input type="tel" id="tel" class="form-control" required />
+                                    <label class="form-label required" for="tel">Телефон</label>
+                                </div>
+
+                                <div class="form-outline mb-2">
+                                    <input type="email" id="email" class="form-control" required />
+                                    <label class="form-label required" for="email">Почта</label>
+                                </div>
+
+                                <div class="form-row align-items-center mb-4">
+                                    <div class="col-auto mb-2">
+                                        <input type="number" class="form-control" id="tgId" placeholder="432153245"
+                                            required />
+                                        <label class="sr-only required" for="tgId">Telegram ID</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">@</div>
+                                            </div>
+                                            <input type="text" class="form-control" id="userName" placeholder="username"
+                                                required />
+                                        </div>
+                                        <label class="sr-only required" for="userName">Имя пользователя Telegram</label>
+                                    </div>
+                                </div>
+
+                                <div class="form-outline mb-2">
+                                    <input type="text" id="level" class="form-control" />
+                                    <label class="form-label" for="level">Уровень подготовки</label>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <textarea class="form-control" id="description" rows="3"></textarea>
+                                    <label for="description">Дополнительное описание</label>
+                                </div>
+
+                                <div class="form-group col-md-4 mb-2">
+                                    <label for="timezone">Часовой пояс</label>
+                                    <select class="form-control" id="timezone" required>
+                                        <option selected>UTC+3</option>
+                                        <option>UTC+2</option>
+                                        <option>UTC+4</option>
+                                        <option>UTC+5</option>
+                                        <option>UTC+6</option>
+                                        <option>UTC+7</option>
+                                        <option>UTC+8</option>
+                                        <option>UTC+9</option>
+                                        <option>UTC+10</option>
+                                        <option>UTC+11</option>
+                                        <option>UTC+12</option>
+                                    </select>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="form-group mb-2">
+                                        <label class="required" for="access_start">Запись активна с:</label>
+                                        <input type="date" class="form-control" id="access_start" required />
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="required" for="access_end">Запись пассивна с:</label>
+                                        <input type="date" class="form-control" id="access_end" required />
+                                    </div>
+                                </div>
+                              </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <style>
+        .required:after {
+            content: " *";
+            color: red;
+        }
+    </style>
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+
+        const form = document.getElementById('form');
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+        });
+        const initData = Telegram.WebApp.initData || '';
+        const MainButton = Telegram.WebApp.MainButton
+        MainButton.setText('Сохранить запись').show()
+
+        const phoneNumber = document.getElementById('tel');
+        const phoneMask = IMask(phoneNumber, {
+            mask: '(000) 000-00-00',
+            lazy: false,
+        });
+
+        const sendRequest = (path) => {
+            $.ajax(path, {
+                method: 'POST',
+                data: {
+                    _auth: initData,
+                    id: params.id,
+                    firstName: form.firstName.value,
+                    lastName: form.lastName.value,
+                    patronymic: form.patronymic.value,
+                    tel: phoneMask.unmaskedValue,
+                    email: form.email.value,
+                    tgId: form.tgId.value,
+                    userName: form.userName.value,
+                    level: form.level.value,
+                    description: form.description.value,
+                    access_start: form.access_start.value,
+                    access_end: form.access_end.value,
+                    timezone: form.timezone.value,
+                    msgId: params.mid
+                },
+                dataType: 'json',
+                success: (result) => {
+                    Telegram.WebApp.close();
+                },
+                error: (jqXHR) => {
+                    if (jqXHR.status === 400) {
+                        alert('Проверьте правильность ввода полей!')
+                    } else {
+                        alert('Ошибка!')
+                    }
+                }
+            });
+        };
+
+        const getData = (path, id) => {
+            $.ajax(path, {
+                method: 'POST',
+                data: {
+                    _auth: initData,
+                    id: id
+                },
+                dataType: 'json',
+                success: (result) => {
+                    setData(result)
+                },
+                error: (jqXHR) => {
+                    alert('Ошибка!')
+                }
+            });
+        };
+
+        const setData = (data) => {
+            form.firstName.value = data.admin.first_name;
+            form.lastName.value = data.admin.last_name;
+            form.patronymic.value = data.admin.patronymic;
+            form.email.value = data.admin.email;
+            form.tgId.value = data.admin.telegram_id;
+            form.userName.value = data.admin.user_name;
+            form.level.value = data.admin.level;
+            form.description.value = data.admin.description;
+            form.access_start.value = data.admin.access_start;
+            form.access_end.value = data.admin.access_end;
+            form.timezone.value = data.admin.timezone;
+            phoneMask.value = data.admin.tel;
+        }
+        getData("/administrator", params.id)
+
+        MainButton.onClick(() => {
+            try {
+                sendRequest("/administrator/change-info")
+            } catch (err) {
+                alert(err)
+            }
+        });
+    </script>
+</body>
+</html>

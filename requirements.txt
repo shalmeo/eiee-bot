@@ -8,3 +8,9 @@ python-dotenv==0.20.0
 alembic==1.8.0
 openpyxl==3.0.10
 dataclass_factory==2.14
+arq==0.22
+multidict==6.0.2
+aiohttp==3.8.1
+pytz~=2022.1
+python-dateutil~=2.8.2
+pydantic~=1.9.1

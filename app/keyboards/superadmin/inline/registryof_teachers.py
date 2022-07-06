@@ -10,8 +10,14 @@ from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory, Regi
 from app.services.database.models import Teacher
 
 
+class TeacherAction(Enum):
+    INFO = "info"
+    CHANGE = "change"
+
+
 class TeacherCallbackFactory(CallbackData, prefix="teacher"):
     teacher_id: int
+    action: TeacherAction
 
 
 class TeacherPageController(CallbackData, prefix="teacher_controller"):
@@ -19,7 +25,7 @@ class TeacherPageController(CallbackData, prefix="teacher_controller"):
 
 
 class WayCreateTeacher(Enum):
-    FROM_EXCEL = "create record from excel"
+    FROM_EXCEL = "from excel"
 
 
 class CreateRecordofTeacher(CallbackData, prefix="create_teacher"):
@@ -39,7 +45,9 @@ def get_registryof_teachers_kb(
     for teacher in teachers:
         builder.button(
             text=f"{teacher.last_name} {teacher.first_name}",
-            callback_data=TeacherCallbackFactory(teacher_id=teacher.id).pack(),
+            callback_data=TeacherCallbackFactory(
+                teacher_id=teacher.id, action=TeacherAction.INFO
+            ).pack(),
         )
 
     builder.adjust(3)
@@ -72,10 +80,17 @@ def get_registryof_teachers_kb(
     return builder.as_markup()
 
 
-def get_teacher_info_kb() -> InlineKeyboardMarkup:
+def get_teacher_info_kb(
+    config: Settings, mid: int, admin_id: int
+) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton(text="Изменить запись", callback_data="some"),
+            InlineKeyboardButton(
+                text="Изменить запись",
+                web_app=WebAppInfo(
+                    url=f"https://{config.webhook.host}/teacher/change-info?mid={mid}&id={admin_id}"
+                ),
+            ),
         ],
         [
             InlineKeyboardButton(

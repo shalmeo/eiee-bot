@@ -11,4 +11,4 @@ class DefaultStudentFilter(BaseFilter):
         event_from_user: User,
         repo: DefaultRepo,
     ) -> bool:
-        return await repo.user_is_student(event_from_user.id)
+        return bool(await repo.get_student(event_from_user.id))

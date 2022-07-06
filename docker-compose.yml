@@ -1,41 +1,20 @@
 version: '3.3'
 
 services:
-  bot:
-    env_file: .env
-    container_name: "${BOT_NAME}-bot"
-    build:
-      context: .
-    working_dir: "/usr/src/app/${BOT_NAME}-bot"
-    volumes:
-    - .:/usr/src/app/${BOT_NAME}-bot
-    command: python -m app
-    restart: unless-stopped
-    ports:
-      - 5500:5500
-    networks:
-      - botnet
-    depends_on:
-      - database
-      - db_migration
-      - redis
   redis:
     env_file: .env
     image: redis:7.0-rc-alpine
-    container_name: "${BOT_NAME}-redis"
-    volumes:
-      - "./redis.conf:/usr/local/etc/redis"
-      - "./redis/data:/data"
-    command: "redis-server /usr/local/etc/redis --requirepass ${REDIS_PASS}"
+    container_name: "redis"
+    command: "redis-server /usr/local/etc/redis --requirepass ${REDIS__PASSWORD}"
     ports:
-      - 6379
+      - "6379"
     restart: "unless-stopped"
     networks:
       - botnet
   database:
     env_file: .env
     image: "postgres:14.2-alpine"
-    container_name: "${BOT_NAME}-db"
+    container_name: "db"
     volumes:
       - "./pg/data:/var/lib/postgresql/data"
       - "./pg/init:/docker-entrypoint-initdb.d"
@@ -44,21 +23,19 @@ services:
       POSTGRES_PASSWORD: $POSTGRES__PASSWORD
       POSTGRES_DB: $POSTGRES__DB
     ports:
-      - 5432
+      - "5432"
     restart: unless-stopped
     networks:
       - botnet
   db_migration:
     env_file: .env
-    container_name: "${BOT_NAME}-migr"
-    build:
-      context: .
+    container_name: "migr"
     restart: "on-failure"
     command: sh -c "python -m alembic upgrade head"
-    networks:
-      - botnet
     depends_on:
       - database
+    networks:
+      - botnet
 
 networks:
   botnet:

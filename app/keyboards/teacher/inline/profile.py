@@ -7,7 +7,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 class ProfileAction(Enum):
     GROUPS = "groups"
     CREATE_HOMETASK = "create home task"
-    CHECK_HOMETASK = "check home task"
+    CHECK_HOMEWORKS = "check home task"
 
 
 class ProfileCallbackFactory(CallbackData, prefix="profile"):
@@ -18,7 +18,7 @@ def get_profile_kb() -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton(
-                text="Ознакомится с перечнем и составом групп",
+                text="Перечень и состав групп",
                 callback_data=ProfileCallbackFactory(
                     action=ProfileAction.GROUPS
                 ).pack(),
@@ -36,7 +36,7 @@ def get_profile_kb() -> InlineKeyboardMarkup:
             InlineKeyboardButton(
                 text="Проверить выполненное Д/З",
                 callback_data=ProfileCallbackFactory(
-                    action=ProfileAction.CHECK_HOMETASK
+                    action=ProfileAction.CHECK_HOMEWORKS
                 ).pack(),
             )
         ],
