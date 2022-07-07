@@ -19,6 +19,9 @@ services:
     env_file: .env
     image: redis:7.0-rc-alpine
     container_name: "eiee-redis"
+    volumes:
+      - "./redis.conf:/usr/local/etc/redis"
+      - "./redis/data:/data"
     command: "redis-server /usr/local/etc/redis --requirepass ${REDIS__PASSWORD}"
     ports:
       - "6379"
