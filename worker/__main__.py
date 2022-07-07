@@ -7,6 +7,7 @@ from app.config_reader import config
 from app.misc.configure import configure_logging
 from worker.storage.redis import ArqRedisStorage
 from worker.tasks.media_group import handle_media_group_task
+from worker.tasks.send_msg import send_message_task
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ async def shutdown(ctx: dict):
 class WorkerSettings:
     on_startup = startup
     on_shutdown = shutdown
-    functions = [handle_media_group_task]
+    functions = [handle_media_group_task, send_message_task]
 
 
 def main():

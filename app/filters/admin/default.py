@@ -11,4 +11,4 @@ class DefaultAdminFilter(BaseFilter):
         event_from_user: User,
         repo: DefaultRepo,
     ) -> bool:
-        return await repo.user_is_admin(event_from_user.id)
+        return bool(await repo.get_admin(event_from_user.id))

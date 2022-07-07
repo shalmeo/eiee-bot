@@ -51,18 +51,15 @@ async def teacher_register(request: Request):
         teacher = admin_repo.add_new_teacher(form)
         await session.commit()
 
-    await _send_info(bot, init_data.user.id, teacher, form.msg_id)
+    await _send_info(bot, init_data.user.id, teacher, form.msg_id, config)
 
     return json_response({"ok": True})
 
 
 async def _send_info(
-    bot: Bot,
-    user_id: int,
-    teacher: Teacher,
-    msg_id: int,
+    bot: Bot, user_id: int, teacher: Teacher, msg_id: int, config: Settings
 ) -> None:
     text = get_teacher_info_text(teacher)
-    markup = get_teacher_info_kb()
+    markup = get_teacher_info_kb(config, msg_id, user_id)
     await delete_last_message(bot, user_id, msg_id)
     await bot.send_message(user_id, text, reply_markup=markup)

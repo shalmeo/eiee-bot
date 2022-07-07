@@ -229,3 +229,15 @@ class SuperAdminRepo:
         await self.session.execute(
             delete(UnRegisteredUser).where(UnRegisteredUser.telegram_id == telegram_id)
         )
+
+    async def get_parents_by_id(self, student_id: int) -> Iterable[Parent]:
+        result = await self.session.scalars(
+            select(Parent).join(Family).where(Family.student_id == student_id)
+        )
+
+        return result.all()
+
+    async def get_student_telegram_id(self, sid: int) -> int:
+        return await self.session.scalar(
+            select(Student.telegram_id).where(Student.id == sid).options(lazyload("*"))
+        )

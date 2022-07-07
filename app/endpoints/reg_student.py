@@ -60,13 +60,15 @@ async def student_register(request: Request):
 
         await session.commit()
 
-    await _send_info(bot, init_data.user.id, student, form.msg_id)
+    await _send_info(bot, init_data.user.id, student, form.msg_id, config)
 
     return json_response({"ok": True})
 
 
-async def _send_info(bot: Bot, user_id: int, student: Student, msg_id: int):
+async def _send_info(
+    bot: Bot, user_id: int, student: Student, msg_id: int, config: Settings
+):
     text = get_student_info_text(student)
-    markup = get_student_info_kb()
+    markup = get_student_info_kb(config, msg_id, student.id)
     await delete_last_message(bot, user_id, msg_id)
     await bot.send_message(user_id, text, reply_markup=markup)

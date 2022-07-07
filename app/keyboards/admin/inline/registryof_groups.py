@@ -1,14 +1,15 @@
 from typing import Iterable
 
 from aiogram.dispatcher.filters.callback_data import CallbackData
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from app.config_reader import Settings
 from app.services.database.models import Group
 
 
 class GroupCallbackFactory(CallbackData, prefix="group"):
-    group_uuid: int
+    group_uuid: str
 
 
 class GroupPageController(CallbackData, prefix="group_controller"):
@@ -16,7 +17,12 @@ class GroupPageController(CallbackData, prefix="group_controller"):
 
 
 def get_registryof_groups_kb(
-    groups: Iterable[Group], count: int, offset: int, limit: int
+    groups: Iterable[Group],
+    count: int,
+    offset: int,
+    limit: int,
+    config: Settings,
+    msg_id: int,
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
@@ -36,6 +42,15 @@ def get_registryof_groups_kb(
         InlineKeyboardButton(text=f"{current_page}/{pages}", callback_data="none"),
         InlineKeyboardButton(
             text="➡️", callback_data=GroupPageController(offset=offset + limit).pack()
+        ),
+    )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="Создать запись",
+            web_app=WebAppInfo(
+                url=f"https://{config.webhook.host}/group/create-form?{msg_id=}"
+            ),
         ),
     )
 

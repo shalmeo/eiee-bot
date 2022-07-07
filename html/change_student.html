@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация</title>
+    <title>Учитель</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
@@ -23,13 +23,9 @@
                 <div class="col-lg-8 col-xl-6">
                     <div class="card rounded-3">
                         <div class="card-body p-4 p-md-5">
-                            <h3 class="mb-4 pb-2 pb-md-0 mb-md-5 px-md-2">Информация об ученике</h3>
+                            <h3 class="mb-4 pb-2 pb-md-0 mb-md-5 px-md-2">Информация об учителе</h3>
 
                             <form class="px-md-2" id="form">
-                                <div class="form-outline mb-2">
-                                    <input type="number" id="id" class="form-control" required />
-                                    <label class="form-label required" for="id">Уникальный идентификатор</label>
-                                </div>
                                 <div class="form-outline mb-2">
                                     <input type="text" id="lastName" class="form-control" required />
                                     <label class="form-label required" for="lastName">Фамилия</label>
@@ -50,7 +46,7 @@
 
                                 <div class="form-outline mb-2">
                                     <input type="email" id="email" class="form-control" required />
-                                    <label class="form-label" for="email">Почта</label>
+                                    <label class="form-label required" for="email">Почта</label>
                                 </div>
 
                                 <div class="form-row align-items-center mb-4">
@@ -68,35 +64,6 @@
                                                 required />
                                         </div>
                                         <label class="sr-only required" for="userName">Имя пользователя Telegram</label>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-2 parentForm">
-                                    <div class="form-group col-md-4">
-                                        <input type="text" class="form-control" id="parentFullName1">
-                                        <label for="parentFullName1">ФИО Родителя 1</label>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <input type="number" class="form-control" id="parentTgId1">
-                                        <label for="parentTgId1">Telegram ID</label>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <input type="tel" id="parentTel1" class="form-control" required />
-                                        <label class="form-label" for="parentTel1">Телефон</label>
-                                    </div>
-                                </div>
-                                <div class="row mb-4 parentForm">
-                                    <div class="form-group col-md-4">
-                                        <input type="text" class="form-control" id="parentFullName2">
-                                        <label for="parentFullName2">ФИО Родителя 2</label>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <input type="number" class="form-control" id="parentTgId2">
-                                        <label for="parentTgId2">Telegram ID</label>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <input type="tel" id="parentTel2" class="form-control" required />
-                                        <label class="form-label" for="parentTel2">Телефон</label>
                                     </div>
                                 </div>
 
@@ -128,7 +95,7 @@
                                         <input type="date" class="form-control" id="access_end" required />
                                     </div>
                                 </div>
-                            </form>
+                              </form>
                         </div>
                     </div>
                 </div>
@@ -150,44 +117,22 @@
             get: (searchParams, prop) => searchParams.get(prop),
         });
         const initData = Telegram.WebApp.initData || '';
+        const initDataUnsafe = Telegram.WebApp.initDataUnsafe || {};
         const MainButton = Telegram.WebApp.MainButton
+        MainButton.setText('Сохранить запись').show()
 
-        MainButton.setText('Создать запись').show()
-        
-        let phoneNumber = document.getElementById('tel');
-        let parentTel1 = document.getElementById('parentTel1');
-        let parentTel2 = document.getElementById('parentTel2');
-        
-        let phoneMask = IMask(phoneNumber, {
+        const phoneNumber = document.getElementById('tel');
+        const phoneMask = IMask(phoneNumber, {
             mask: '(000) 000-00-00',
             lazy: false,
-        });
-        let phoneMaskParentTel1 = IMask(parentTel1, {
-            mask: '(000) 000-00-00',
-            lazy: false,
-        });
-        let phoneMaskParentTel2 = IMask(parentTel2, {
-            mask: '(000) 000-00-00',
-            lazy: false,
-        });
-
-        MainButton.onClick(() => {
-            try {
-                sendRequest("/student/register")
-            } catch (err) {
-                alert(err)
-            }
         });
 
         const sendRequest = (path) => {
-            let parent1 = `${form.parentFullName1.value}&${form.parentTgId1.value}&${phoneMaskParentTel1.unmaskedValue}`;
-            let parent2 = `${form.parentFullName2.value}&${form.parentTgId2.value}&${phoneMaskParentTel2.unmaskedValue}`;
-
             $.ajax(path, {
                 method: 'POST',
                 data: {
                     _auth: initData,
-                    id: form.id.value,
+                    id: params.id,
                     firstName: form.firstName.value,
                     lastName: form.lastName.value,
                     patronymic: form.patronymic.value,
@@ -198,10 +143,8 @@
                     access_start: form.access_start.value,
                     access_end: form.access_end.value,
                     timezone: form.timezone.value,
-                    parent1: parent1,
-                    parent2: parent2,
-                    msgId: params.msg_id,
-                    adminId: params.admin_id,
+                    msgId: params.mid,
+                    adminId: initDataUnsafe.user.id,
                 },
                 dataType: 'json',
                 success: (result) => {
@@ -210,15 +153,51 @@
                 error: (jqXHR) => {
                     if (jqXHR.status === 400) {
                         alert('Проверьте правильность ввода полей!')
-                    } else if (jqXHR.status === 409) {
-                        alert('Ученик с таким ID уже существует');
                     } else {
-                        alert('Ошибка!');
+                        alert('Ошибка!')
                     }
                 }
             });
+        };
+
+        const getData = (path, id) => {
+            $.ajax(path, {
+                method: 'POST',
+                data: {
+                    _auth: initData,
+                    id: id
+                },
+                dataType: 'json',
+                success: (result) => {
+                    setData(result)
+                },
+                error: (jqXHR) => {
+                    alert(jqXHR.code)
+                }
+            });
+        };
+
+        const setData = (data) => {
+            form.firstName.value = data.student.first_name;
+            form.lastName.value = data.student.last_name;
+            form.patronymic.value = data.student.patronymic;
+            form.email.value = data.student.email;
+            form.tgId.value = data.student.telegram_id;
+            form.userName.value = data.student.user_name;
+            form.access_start.value = data.student.access_start;
+            form.access_end.value = data.student.access_end;
+            form.timezone.value = data.student.timezone;
+            phoneMask.value = data.student.tel;
         }
+        getData("/student", params.id)
+
+        MainButton.onClick(() => {
+            try {
+                sendRequest("/student/change-info")
+            } catch (err) {
+                alert(err)
+            }
+        });
     </script>
 </body>
-
 </html>

@@ -42,7 +42,7 @@ class AdminRepoMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         session = data["session"]
-        data["admin_repo"] = AdminRepo(session)
+        data["admin_repo"] = AdminRepo(session, event.from_user.id)
         return await handler(event, data)
 
 

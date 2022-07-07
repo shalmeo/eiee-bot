@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учитель</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+        crossorigin="anonymous"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/imask"></script>
+</head>
+
+<body>
+    <section class="h-100 h-custom" style="background-color: #8fc4b7;">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-lg-8 col-xl-6">
+                    <div class="card rounded-3">
+                        <div class="card-body p-4 p-md-5">
+                            <h3 class="mb-4 pb-2 pb-md-0 mb-md-5 px-md-2">Информация о родителях</h3>
+
+                            <form class="px-md-2" id="form">
+                                <div class="row mb-2 parentForm">
+                                    <div class="form-group col-md-4">
+                                        <input type="text" class="form-control" id="firstParentFullName">
+                                        <label for="firstParentFullName">ФИО Родителя 1</label>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <input type="number" class="form-control" id="firstParentTgId">
+                                        <label for="firstParentTgId">Telegram ID</label>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <input type="tel" id="firstParentTel" class="form-control" required />
+                                        <label class="form-label" for="firstParentTel">Телефон</label>
+                                    </div>
+                                </div>
+                                <div class="row mb-4 parentForm">
+                                    <div class="form-group col-md-4">
+                                        <input type="text" class="form-control" id="secondParentFullName">
+                                        <label for="secondParentFullName">ФИО Родителя 2</label>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <input type="number" class="form-control" id="secondParentTgId">
+                                        <label for="secondParentTgId">Telegram ID</label>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <input type="tel" id="secondParentTel" class="form-control" required />
+                                        <label class="form-label" for="secondParentTel">Телефон</label>
+                                    </div>
+                                </div>
+                              </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <style>
+        .required:after {
+            content: " *";
+            color: red;
+        }
+    </style>
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+
+        const form = document.getElementById('form');
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+        });
+        const initData = Telegram.WebApp.initData || '';
+        const initDataUnsafe = Telegram.WebApp.initDataUnsafe || {};
+        const MainButton = Telegram.WebApp.MainButton
+        MainButton.setText('Сохранить запись').show()
+
+        const firstParentTel = document.getElementById('firstParentTel');
+        const secondParentTel = document.getElementById('secondParentTel');
+        const firstTelMask = IMask(firstParentTel, {
+            mask: '(000) 000-00-00',
+            lazy: false,
+        });
+        const secondTelMask = IMask(secondParentTel, {
+            mask: '(000) 000-00-00',
+            lazy: false,
+        });
+
+        const sendRequest = (path) => {
+            let parent1 = `${form.firstParentFullName.value}&${form.firstParentTgId.value}&${firstTelMask.unmaskedValue}`;
+            let parent2 = `${form.secondParentFullName.value}&${form.secondParentTgId.value}&${secondTelMask.unmaskedValue}`;
+            $.ajax(path, {
+                method: 'POST',
+                data: {
+                    _auth: initData,
+                    id: params.id,
+                    msgId: params.mid,
+                    adminId: initDataUnsafe.user.id,
+                    parent1: parent1,
+                    parent2: parent2
+                },
+                dataType: 'json',
+                success: (result) => {
+                    Telegram.WebApp.close();
+                },
+                error: (jqXHR) => {
+                    if (jqXHR.status === 400) {
+                        alert('Проверьте правильность ввода полей!')
+                    } else {
+                        alert('Ошибка!')
+                    }
+                }
+            });
+        };
+
+        const getData = (path, id) => {
+            $.ajax(path, {
+                method: 'POST',
+                data: {
+                    _auth: initData,
+                    id: id
+                },
+                dataType: 'json',
+                success: (result) => {
+                    setData(result)
+                },
+                error: (jqXHR) => {
+                    alert('Ошибка!')
+                }
+            });
+        };
+
+        const setData = (data) => {
+            let firstParent = data.parents[0];
+            let secondParent = data.parents[1];
+
+            if (firstParent) {
+                form.firstParentFullName.value = `${firstParent.last_name} ${firstParent.first_name} ${firstParent.patronymic}`;
+                form.firstParentTgId.value = firstParent.telegram_id;
+                console.log(firstParent)
+                firstTelMask.value = firstParent.tel;
+            }
+
+            if (secondParent) {
+                form.secondParentFullName.value = `${secondParent.last_name} ${secondParent.first_name} ${secondParent.patronymic}`;
+                form.secondParentTgId.value = secondParent.telegram_id;
+                secondTelMask.value = secondParent.tel;
+            }
+        }
+        getData("/student/parents", params.id)
+
+        MainButton.onClick(() => {
+            try {
+                sendRequest("/student/change-parents-info")
+            } catch (err) {
+                alert(err)
+            }
+        });
+    </script>
+</body>
+</html>

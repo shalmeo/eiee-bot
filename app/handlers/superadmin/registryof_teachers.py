@@ -47,19 +47,15 @@ async def on_registryof_teachers(
 
     teachers, offset, limit = await superadmin_repo.get_registry(Teacher, offset)
     count = await repo.get_count(Teacher)
+    admin = await repo.get_admin(call.from_user.id)
     markup = get_registryof_teachers_kb(
-        teachers,
-        config,
-        call.message.message_id,
-        count,
-        offset,
-        limit,
+        teachers, config, call.message.message_id, count, offset, limit, admin.id
     )
     await call.message.edit_text("Реестр учителей", reply_markup=markup)
     await call.answer()
 
     await state.set_state(None)
-    await state.update_data(offset=offset)
+    await state.update_data(offset=offset, admin_id=admin.id)
 
 
 @router.callback_query(TeacherCallbackFactory.filter(F.action == TeacherAction.INFO))
@@ -160,7 +156,7 @@ async def page_controller(
     except DBAPIError:
         await call.answer()
         return
-
+    data = await state.get_data()
     count = await repo.get_count(Teacher)
 
     pages = count // limit + bool(count % limit)
@@ -174,6 +170,7 @@ async def page_controller(
             count,
             offset,
             limit,
+            data["admin_id"],
         )
         with suppress(TelegramBadRequest):
             await call.message.edit_reply_markup(markup)

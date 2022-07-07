@@ -33,6 +33,7 @@ def get_registryof_students_kb(
     count: int,
     offset: int,
     limit: int,
+    admin_id: int,
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
@@ -59,7 +60,7 @@ def get_registryof_students_kb(
         InlineKeyboardButton(
             text="Создать запись",
             web_app=WebAppInfo(
-                url=f"https://{config.webhook.host}/student/reg-form?msg_id={msg_id}"
+                url=f"https://{config.webhook.host}/student/reg-form?{msg_id=}&{admin_id=}"
             ),
         ),
     )

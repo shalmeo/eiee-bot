@@ -54,6 +54,7 @@ async def main():
     app["session_factory"] = session_factory
     app["config"] = config
     app["storage"] = storage
+    app["tasks"] = Tasks(redis)
 
     middlewares.setup(
         dispatcher,

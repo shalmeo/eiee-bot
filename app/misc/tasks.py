@@ -1,3 +1,4 @@
+import datetime
 from datetime import timedelta
 
 from arq import ArqRedis
@@ -18,4 +19,16 @@ class Tasks:
             callback=callback,
             _defer_by=timedelta(seconds=1),
             _job_id=f"media_group:{media_group_id}",
+        )
+
+    async def send_message(
+        self, chat_id: int, text: str, dt: datetime.datetime = None
+    ) -> Job:
+        if dt:
+            return await self.redis.enqueue_job(
+                "send_message_task", chat_id=chat_id, text=text, _defer_until=dt
+            )
+
+        return await self.redis.enqueue_job(
+            "send_message_task", chat_id=chat_id, text=text
         )

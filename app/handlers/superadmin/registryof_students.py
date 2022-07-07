@@ -20,10 +20,12 @@ from app.keyboards.superadmin.inline.registryof_students import (
     get_read_excel_kb,
     get_registryof_students_kb,
     get_student_info_kb,
+    ParentCallbackFactory,
+    get_parents_info_kb,
 )
 from app.misc.delete_message import delete_last_message
 from app.misc.models import StudentModel
-from app.misc.text import get_student_info_text
+from app.misc.text import get_student_info_text, get_parent_info_text
 from app.services.database.models import Parent, Student
 from app.services.database.repositories.default import DefaultRepo
 from app.services.database.repositories.superadmin import SuperAdminRepo
@@ -46,30 +48,29 @@ async def on_registryof_students(
 
     students, offset, limit = await superadmin_repo.get_students(offset)
     count = await repo.get_count(Student)
+    admin = await repo.get_admin(call.from_user.id)
     markup = get_registryof_students_kb(
-        students,
-        config,
-        call.message.message_id,
-        count,
-        offset,
-        limit,
+        students, config, call.message.message_id, count, offset, limit, admin.id
     )
     await call.message.edit_text("Реестр учеников", reply_markup=markup)
     await call.answer()
 
     await state.set_state(None)
-    await state.update_data(offset=offset)
+    await state.update_data(offset=offset, admin_id=admin.id)
 
 
 @router.callback_query(StudentCallbackFactory.filter())
 async def on_student_info(
     call: CallbackQuery,
-    repo: DefaultRepo,
     callback_data: StudentCallbackFactory,
+    repo: DefaultRepo,
+    config: Settings,
 ):
     student = await repo.get(Student, callback_data.student_id)
     text = get_student_info_text(student)
-    markup = get_student_info_kb()
+    markup = get_student_info_kb(
+        config, call.message.message_id, callback_data.student_id
+    )
     await call.message.edit_text(text, reply_markup=markup)
     await call.answer()
 
@@ -144,6 +145,24 @@ async def on_load_students(
     )
 
 
+@router.callback_query(ParentCallbackFactory.filter())
+async def on_parents_info(
+    call: CallbackQuery,
+    callback_data: ParentCallbackFactory,
+    superadmin_repo: SuperAdminRepo,
+    config: Settings,
+):
+    parents = await superadmin_repo.get_parents_by_id(callback_data.student_id)
+
+    text = "Родители\n\n" + "\n\n".join([get_parent_info_text(p) for p in parents])
+    markup = get_parents_info_kb(
+        callback_data.student_id, config, call.message.message_id
+    )
+
+    await call.message.edit_text(text, reply_markup=markup)
+    await call.answer()
+
+
 @router.callback_query(StudentPageController.filter())
 async def page_controller(
     call: CallbackQuery,
@@ -160,7 +179,7 @@ async def page_controller(
     except DBAPIError:
         await call.answer()
         return
-
+    data = await state.get_data()
     count = await repo.get_count(Student)
 
     pages = count // limit + bool(count % limit)
@@ -174,6 +193,7 @@ async def page_controller(
             count,
             offset,
             limit,
+            data["admin_id"],
         )
         with suppress(TelegramBadRequest):
             await call.message.edit_reply_markup(markup)

@@ -1,10 +1,24 @@
 version: '3.3'
 
 services:
+  bot:
+    env_file: .env
+    container_name: "eiee-bot"
+    build:
+      context: .
+    working_dir: "/usr/src/app/eiee-bot"
+    volumes:
+      - .:/usr/src/app/eiee-bot
+    command: python -m app
+    ports:
+      - 5500:5500
+    restart: unless-stopped
+    networks:
+      - botnet
   redis:
     env_file: .env
     image: redis:7.0-rc-alpine
-    container_name: "redis"
+    container_name: "eiee-redis"
     command: "redis-server /usr/local/etc/redis --requirepass ${REDIS__PASSWORD}"
     ports:
       - "6379"
@@ -14,7 +28,7 @@ services:
   database:
     env_file: .env
     image: "postgres:14.2-alpine"
-    container_name: "db"
+    container_name: "eiee-db"
     volumes:
       - "./pg/data:/var/lib/postgresql/data"
       - "./pg/init:/docker-entrypoint-initdb.d"
@@ -28,12 +42,26 @@ services:
     networks:
       - botnet
   db_migration:
+    build:
+      context: .
     env_file: .env
-    container_name: "migr"
+    container_name: "eiee-migr"
     restart: "on-failure"
     command: sh -c "python -m alembic upgrade head"
     depends_on:
       - database
+    networks:
+      - botnet
+  worker:
+    env_file: .env
+    container_name: "eiee-worker"
+    build:
+      context: .
+    working_dir: "/usr/src/app/eiee-bot"
+    volumes:
+      - .:/usr/src/app/eiee-bot
+    command: python -m worker
+    restart: unless-stopped
     networks:
       - botnet
 

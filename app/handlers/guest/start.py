@@ -5,7 +5,7 @@ router = Router()
 
 @router.message(commands="start")
 async def on_cmd_start(message: types.Message):
-    text = "Здравстсвуйте, вы уже зарегестрированы в нашей школе?"
+    text = "Добро пожаловать, вы уже зарегестрированы в нашей школе?"
     markup = types.ReplyKeyboardMarkup(
         keyboard=[
             [

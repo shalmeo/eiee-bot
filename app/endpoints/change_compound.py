@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config_reader import Settings
 from app.misc.delete_message import delete_last_message
+from app.misc.tasks import Tasks
 from app.services.database.repositories.superadmin import SuperAdminRepo
 
 
@@ -49,6 +50,7 @@ async def change_compound(request: Request):
     config: Settings = request.app["config"]
     bot: Bot = request.app["bot"]
     session_factory: sessionmaker = request.app["session_factory"]
+    tasks: Tasks = request.app["tasks"]
 
     try:
         init_data = safe_parse_webapp_init_data(
@@ -65,6 +67,8 @@ async def change_compound(request: Request):
         for s in students:
             if isinstance(s, dict):
                 sid = int(s["0"])
+                stelegram_id = await repo.get_student_telegram_id(sid)
+                await tasks.send_message(stelegram_id, "Ваши группы были изменены")
             elif isinstance(s, list):
                 sid, _ = s
             else:

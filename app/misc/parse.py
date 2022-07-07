@@ -122,8 +122,8 @@ def parse_student_register_data(data: MultiDictProxy) -> StudentModel:
     msg_id: int = int(data.get("msgId"))
     admin_id: int = int(data.get("adminId"))
 
-    parent1 = _parse_parent(data.get("parent1", ""))
-    parent2 = _parse_parent(data.get("parent2", ""))
+    parent1 = parse_parent(data.get("parent1", ""))
+    parent2 = parse_parent(data.get("parent2", ""))
 
     return StudentModel(
         id=student_id,
@@ -143,7 +143,7 @@ def parse_student_register_data(data: MultiDictProxy) -> StudentModel:
     )
 
 
-def _parse_parent(parent: str) -> ParentModel | None:
+def parse_parent(parent: str) -> ParentModel | None:
     try:
         full_name, tg_id, tel = parent.split("&")
 

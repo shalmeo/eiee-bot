@@ -11,7 +11,7 @@ from app.misc.delete_message import delete_last_message
 from app.misc.exceptions import RegisterFormValidateError
 from app.misc.parse import parse_group_info_data
 from app.misc.text import get_group_info_text
-from app.services.database import Group
+from app.services.database.models import Group
 from app.services.database.repositories.default import DefaultRepo
 from app.services.database.repositories.superadmin import SuperAdminRepo
 
@@ -56,7 +56,7 @@ async def new_group(request: Request):
 
 
 async def _send_info(
-    bot: Bot, user_id: int, group: Group, msg_id: int, config: Settings
+    bot: Bot, user_id: int, group: Group, msg_id: int | str, config: Settings
 ) -> None:
     text = get_group_info_text(group)
     markup = get_create_group_kb(group, config, msg_id)

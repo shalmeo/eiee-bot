@@ -9,6 +9,7 @@ from app.services.database.models import (
     Teacher,
     HomeWork,
     Group,
+    Parent,
 )
 
 T = TypeVar("T", Student, Administrator, Teacher, SignUpModel)
@@ -123,3 +124,14 @@ def get_user_sign_up_text(user: SignUpModel) -> str:
     text = _get_user_info_text(user)
 
     return text
+
+
+def get_parent_info_text(parent: Parent) -> str:
+    text = [
+        f"Фамилия: {parent.last_name}\n",
+        f"Имя: {parent.first_name}\n",
+        f"Отчество: {parent.patronymic}\n",
+        f"Телефон: {parent.tel}",
+    ]
+
+    return "".join(text)

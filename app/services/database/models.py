@@ -45,7 +45,9 @@ class Teacher(Base, TimeStampMixin, AccessMixin):
     __tablename__ = "teachers"
 
     id = Column(BigInteger, primary_key=True)
-    admin_id = Column(BigInteger, ForeignKey("administrators.id"))
+    admin_id = Column(
+        BigInteger, ForeignKey("administrators.id", ondelete="SET DEFAULT"), default=0
+    )
     first_name = Column(String)
     last_name = Column(String)
     patronymic = Column(String)
@@ -69,7 +71,9 @@ class Student(Base, TimeStampMixin, AccessMixin):
     __tablename__ = "students"
 
     id = Column(BigInteger, primary_key=True)
-    admin_id = Column(BigInteger, ForeignKey("administrators.id"))
+    admin_id = Column(
+        BigInteger, ForeignKey("administrators.id", ondelete="SET DEFAULT"), default=0
+    )
     first_name = Column(String)
     last_name = Column(String)
     patronymic = Column(String)
@@ -130,7 +134,11 @@ class Group(Base, TimeStampMixin):
     __tablename__ = "groups"
 
     uuid = Column(UUID, primary_key=True)
-    admin_id = Column(BigInteger, ForeignKey("administrators.id"), nullable=False)
+    admin_id = Column(
+        BigInteger,
+        ForeignKey("administrators.id", ondelete="SET DEFAULT"),
+        default=0,
+    )
     teacher_id = Column(
         BigInteger, ForeignKey("teachers.id", ondelete="CASCADE"), nullable=False
     )

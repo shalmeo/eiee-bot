@@ -2,10 +2,20 @@ from aiohttp import web
 
 from app.endpoints.admin import change_admin_info, get_admin, change_admin_info_view
 from app.endpoints.create_group import create_group_form, new_group
+from app.endpoints.parents import (
+    change_student_parents_info_view,
+    get_student_parents,
+    change_student_parents_info,
+)
 from app.endpoints.reg_admin import admin_register_view, admin_register
 from app.endpoints.reg_student import student_register, student_register_view
 from app.endpoints.reg_teacher import teacher_register, teacher_register_view
 from app.endpoints.create_home_task import create_home_task, create_home_task_view
+from app.endpoints.student import (
+    change_student_info_view,
+    change_student_info,
+    get_student,
+)
 from app.endpoints.student_sign_up import student_sign_up_view, student_sign_up
 from app.endpoints.students import get_all_students
 from app.endpoints.teacher import (
@@ -59,3 +69,11 @@ def setup(app: web.Application) -> None:
     app.router.add_get("/teacher/change-info", change_teacher_info_view)
     app.router.add_post("/teacher", get_teacher)
     app.router.add_post("/teacher/change-info", change_teacher_info)
+
+    app.router.add_get("/student/change-info", change_student_info_view)
+    app.router.add_post("/student", get_student)
+    app.router.add_post("/student/change-info", change_student_info)
+
+    app.router.add_get("/student/change-parents-info", change_student_parents_info_view)
+    app.router.add_post("/student/parents", get_student_parents)
+    app.router.add_post("/student/change-parents-info", change_student_parents_info)

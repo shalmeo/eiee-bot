@@ -51,13 +51,15 @@ async def admin_register(request: Request):
         admin = admin_repo.add_new_admin(form)
         await session.commit()
 
-    await _send_info(bot, init_data.user.id, admin, form.msg_id)
+    await _send_info(bot, init_data.user.id, admin, form.msg_id, config)
 
     return json_response({"ok": True})
 
 
-async def _send_info(bot: Bot, user_id: int, admin: Administrator, msg_id: int) -> None:
+async def _send_info(
+    bot: Bot, user_id: int, admin: Administrator, msg_id: int, config: Settings
+) -> None:
     text = get_admin_info_text(admin)
-    markup = get_admin_info_kb()
+    markup = get_admin_info_kb(config, msg_id, admin.id)
     await delete_last_message(bot, user_id, msg_id)
     await bot.send_message(user_id, text, reply_markup=markup)

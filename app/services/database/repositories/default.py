@@ -1,6 +1,6 @@
-from typing import Any, TypeVar, Type
+from typing import Any, TypeVar, Type, Iterable
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import lazyload
 
@@ -10,6 +10,9 @@ from app.services.database.models import (
     Teacher,
     HomeTask,
     Group,
+    Parent,
+    Family,
+    Section,
 )
 
 T = TypeVar("T")
@@ -73,4 +76,34 @@ class DefaultRepo:
     async def get_teacher_by_id(self, tid: int) -> Teacher:
         return await self.session.scalar(
             select(Teacher).where(Teacher.id == tid).options(lazyload("*"))
+        )
+
+    async def get_student_by_id(self, sid: int) -> Student:
+        return await self.session.scalar(
+            select(Student).where(Student.id == sid).options(lazyload("*"))
+        )
+
+    async def get_parents_by_id(self, student_id: int) -> Iterable[Parent]:
+        result = await self.session.scalars(
+            select(Parent)
+            .join(Family)
+            .where(Family.student_id == student_id)
+            .options(lazyload("*"))
+        )
+
+        return result.all()
+
+    async def get_family(self, sid: int, pid: int) -> Family:
+        return await self.session.scalar(
+            select(Family).where(
+                and_(Family.student_id == sid, Family.parent_id == pid)
+            )
+        )
+
+    async def get_students_in_group(self, group_uuid: str) -> Iterable[Student]:
+        return await self.session.scalars(
+            select(Student)
+            .join(Section)
+            .where(Section.group_id == group_uuid)
+            .options(lazyload("*"))
         )

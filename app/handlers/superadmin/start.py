@@ -9,4 +9,4 @@ router = Router()
 @router.message(state="*")
 async def on_msg(message: Message):
     markup = get_menu_kb()
-    await message.answer("Hello superadmin", reply_markup=markup)
+    await message.answer("Добро пожаловать", reply_markup=markup)

@@ -26,10 +26,10 @@ async def get_teacher(request: Request):
     config: Settings = request.app["config"]
     session_factory: sessionmaker = request.app["session_factory"]
 
-    # try:
-    #     safe_parse_webapp_init_data(config.bot_token, init_data=data["_auth"])
-    # except ValueError:
-    #     return json_response({"ok": False, "error": "Unauthorized"}, status=401)
+    try:
+        safe_parse_webapp_init_data(config.bot_token, init_data=data["_auth"])
+    except ValueError:
+        return json_response({"ok": False, "error": "Unauthorized"}, status=401)
 
     async with session_factory() as session:
         repo = DefaultRepo(session)
@@ -84,7 +84,7 @@ async def change_teacher_info(request: Request):
         repo = DefaultRepo(session)
         teacher = await repo.get_teacher_by_id(int(data["id"]))
 
-        _update_admin(teacher, teacher_model)
+        _update_teacher(teacher, teacher_model)
         await session.commit()
 
     await _send_info(bot, init_data.user.id, data["msgId"])
@@ -97,17 +97,17 @@ async def _send_info(bot: Bot, chat_id: int, mid: int | str) -> None:
     await bot.send_message(chat_id, "Данные успешно изменены")
 
 
-def _update_admin(teacher: Teacher, admin_model: TeacherModel) -> None:
-    teacher.id = admin_model.id
-    teacher.last_name = admin_model.last_name
-    teacher.first_name = admin_model.first_name
-    teacher.patronymic = admin_model.patronymic
-    teacher.email = admin_model.email
-    teacher.user_name = admin_model.user_name
-    teacher.tel = admin_model.tel
-    teacher.telegram_id = admin_model.tg_id
-    teacher.level = admin_model.level
-    teacher.description = admin_model.description
-    teacher.timezone = admin_model.timezone
-    teacher.access_end = admin_model.access_end
-    teacher.access_start = admin_model.access_start
+def _update_teacher(teacher: Teacher, teacher_model: TeacherModel) -> None:
+    teacher.id = teacher_model.id
+    teacher.last_name = teacher_model.last_name
+    teacher.first_name = teacher_model.first_name
+    teacher.patronymic = teacher_model.patronymic
+    teacher.email = teacher_model.email
+    teacher.user_name = teacher_model.user_name
+    teacher.tel = teacher_model.tel
+    teacher.telegram_id = teacher_model.tg_id
+    teacher.level = teacher_model.level
+    teacher.description = teacher_model.description
+    teacher.timezone = teacher_model.timezone
+    teacher.access_end = teacher_model.access_end
+    teacher.access_start = teacher_model.access_start

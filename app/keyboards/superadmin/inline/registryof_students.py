@@ -26,6 +26,10 @@ class CreateRecordofStudent(CallbackData, prefix="create_student"):
     way: WayCreateStudent
 
 
+class ParentCallbackFactory(CallbackData, prefix="parent"):
+    student_id: int
+
+
 def get_registryof_students_kb(
     students: Iterable[Student],
     config: Settings,
@@ -33,9 +37,9 @@ def get_registryof_students_kb(
     count: int,
     offset: int,
     limit: int,
+    admin_id: int,
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-
     for s in students:
         builder.button(
             text=f"{s.last_name} {s.first_name}",
@@ -59,7 +63,7 @@ def get_registryof_students_kb(
         InlineKeyboardButton(
             text="Создать запись",
             web_app=WebAppInfo(
-                url=f"https://{config.webhook.host}/student/reg-form?msg_id={msg_id}"
+                url=f"https://{config.webhook.host}/student/reg-form?{msg_id=}&{admin_id=}"
             ),
         ),
         InlineKeyboardButton(
@@ -72,13 +76,23 @@ def get_registryof_students_kb(
     return builder.as_markup()
 
 
-def get_student_info_kb() -> InlineKeyboardMarkup:
+def get_student_info_kb(
+    config: Settings, mid: int, student_id: int
+) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton(text="Изменить запись", callback_data="some"),
+            InlineKeyboardButton(
+                text="Изменить запись",
+                web_app=WebAppInfo(
+                    url=f"https://{config.webhook.host}/student/change-info?mid={mid}&id={student_id}"
+                ),
+            ),
         ],
         [
-            InlineKeyboardButton(text="Родители", callback_data="some"),
+            InlineKeyboardButton(
+                text="Родители",
+                callback_data=ParentCallbackFactory(student_id=student_id).pack(),
+            ),
         ],
         [
             InlineKeyboardButton(
@@ -106,5 +120,26 @@ def get_load_from_excel_kb() -> InlineKeyboardMarkup:
 
 def get_read_excel_kb() -> InlineKeyboardMarkup:
     keyboard = [[InlineKeyboardButton(text="Загрузить", callback_data="load_students")]]
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_parents_info_kb(sid: int, config: Settings, mid: int) -> InlineKeyboardMarkup:
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="Изменить запись",
+                web_app=WebAppInfo(
+                    url=f"https://{config.webhook.host}/student/change-parents-info?mid={mid}&id={sid}"
+                ),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=StudentCallbackFactory(student_id=sid).pack(),
+            )
+        ],
+    ]
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

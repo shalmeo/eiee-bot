@@ -14,9 +14,15 @@ def utc_to_local(utc_dt: datetime.datetime, local: str) -> datetime.datetime:
     return utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=tz.tzstr(local))
 
 
-def local_to_utc(dt: datetime.datetime, local: str) -> datetime.datetime:
+def local_to_utc(
+    dt: datetime.datetime, local: str, with_replace=True
+) -> datetime.datetime:
     return (
-        dt.replace(tzinfo=tz.tzstr(local))
-        .astimezone(tz=datetime.timezone.utc)
-        .replace(tzinfo=None)
+        (
+            dt.replace(tzinfo=tz.tzstr(local))
+            .astimezone(tz=datetime.timezone.utc)
+            .replace(tzinfo=None)
+        )
+        if with_replace
+        else (dt.replace(tzinfo=tz.tzstr(local)).astimezone(tz=datetime.timezone.utc))
     )
