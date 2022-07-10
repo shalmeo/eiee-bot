@@ -130,3 +130,6 @@ dmypy.json
 
 test.py
 *.nginx
+
+pg/
+redis/
