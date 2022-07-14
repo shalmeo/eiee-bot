@@ -13,6 +13,10 @@ from app.services.database.models import (
     Parent,
     Family,
     Section,
+    HomeWork,
+    HomeWorkFile,
+    HomeTaskFile,
+    UnRegisteredUser,
 )
 
 T = TypeVar("T")
@@ -106,4 +110,35 @@ class DefaultRepo:
             .join(Section)
             .where(Section.group_id == group_uuid)
             .options(lazyload("*"))
+        )
+
+    async def get_home_work(self, work_uuid: str) -> HomeWork:
+        return await self.session.scalar(
+            select(HomeWork).where(HomeWork.uuid == work_uuid)
+        )
+
+    async def get_home_work_files(self, home_work_id: str) -> Iterable[HomeWorkFile]:
+        files = await self.session.scalars(
+            select(HomeWorkFile).where(HomeWorkFile.home_work_id == home_work_id)
+        )
+
+        return files.all()
+
+    async def get_home_task_files(self, task_uuid: str) -> Iterable[HomeTaskFile]:
+        files = await self.session.scalars(
+            select(HomeTaskFile).where(HomeTaskFile.home_task_id == task_uuid)
+        )
+
+        return files.all()
+
+    async def get_unreg_user(self, tg_id: int) -> UnRegisteredUser:
+        return await self.session.scalar(
+            select(UnRegisteredUser).where(UnRegisteredUser.telegram_id == tg_id)
+        )
+
+    async def get_section(self, group_uuid: str, student_id: int) -> Section:
+        return await self.session.scalar(
+            select(Section).where(
+                and_(Section.student_id == student_id, Section.group_id == group_uuid)
+            )
         )

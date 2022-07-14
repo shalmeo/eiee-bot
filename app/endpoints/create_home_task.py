@@ -24,7 +24,7 @@ from app.services.database.repositories.teacher import TeacherRepo
 
 
 # GET /teacher/create-home-task-form
-async def create_home_task_view(request: Request):
+async def create_home_task_view(_: Request):
     return FileResponse("html/create_home_task.html")
 
 

@@ -17,7 +17,7 @@ from app.services.database.repositories.superadmin import SuperAdminRepo
 
 
 # GET /group/create-form
-async def create_group_form(request: Request):
+async def create_group_form(_: Request):
     return FileResponse("html/create_group.html")
 
 

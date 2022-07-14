@@ -8,9 +8,9 @@ from sqlalchemy.orm import sessionmaker
 from app.config_reader import Settings
 from app.misc.delete_message import delete_last_message
 from app.misc.exceptions import RegisterFormValidateError
-from app.misc.models import AdminModel, TeacherModel
-from app.misc.parse import parse_admin_register_data, parse_teacher_register_data
-from app.services.database.models import Administrator, Teacher
+from app.misc.models import TeacherModel
+from app.misc.parse import parse_teacher_register_data
+from app.services.database.models import Teacher
 from app.services.database.repositories.default import DefaultRepo
 
 

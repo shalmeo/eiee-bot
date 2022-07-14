@@ -1,15 +1,7 @@
-from enum import Enum
-
 from aiogram.dispatcher.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-
-class Registry(Enum):
-    ADMINISTRATORS = "admins"
-    TEACHERS = "teachers"
-    STUDENTS = "students"
-    GROUPS = "groups"
-    HOME_TASKS = "home tasks"
+from app.keyboards.superadmin.registry import Registry
 
 
 class ProfileCallbackFactory(CallbackData, prefix="profile"):
@@ -44,12 +36,12 @@ def get_profile_kb() -> InlineKeyboardMarkup:
                 callback_data=ProfileCallbackFactory(registry=Registry.GROUPS).pack(),
             )
         ],
-        # [
-        #     InlineKeyboardButton(
-        #         text='Реестр домашних заданий',
-        #         callback_data=ProfileCallbackFactory(registry=Registry.HOME_TASKS).pack()
-        #     )
-        # ],
+        [
+            InlineKeyboardButton(
+                text="Неопределенные пользователи",
+                callback_data=ProfileCallbackFactory(registry=Registry.UNREG).pack(),
+            )
+        ],
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

@@ -1,35 +1,38 @@
 from contextlib import suppress
+from operator import and_
 
 import dataclass_factory
 
 from aiogram import Bot, F, Router
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, BufferedInputFile
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config_reader import Settings
-from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory, Registry
+from app.keyboards.superadmin.excel import ExcelCallbackFactory, ExcelAction
+from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory
 from app.keyboards.superadmin.inline.registryof_students import (
-    CreateRecordofStudent,
     StudentCallbackFactory,
     StudentPageController,
-    WayCreateStudent,
     get_load_from_excel_kb,
     get_read_excel_kb,
     get_registryof_students_kb,
     get_student_info_kb,
     ParentCallbackFactory,
     get_parents_info_kb,
+    StudentAction,
 )
+from app.keyboards.superadmin.registry import Registry
 from app.misc.delete_message import delete_last_message
 from app.misc.models import StudentModel
 from app.misc.text import get_student_info_text, get_parent_info_text
 from app.services.database.models import Parent, Student
 from app.services.database.repositories.default import DefaultRepo
 from app.services.database.repositories.superadmin import SuperAdminRepo
-from app.services.excel.registryof_students import parse_registryof_students_excel
+from app.services.excel.export_data.export_students import get_excel_students
+from app.services.excel.import_data.import_students import import_students_excel
 
 router = Router()
 
@@ -59,7 +62,7 @@ async def on_registryof_students(
     await state.update_data(offset=offset, admin_id=admin.id)
 
 
-@router.callback_query(StudentCallbackFactory.filter())
+@router.callback_query(StudentCallbackFactory.filter(F.action == StudentAction.INFO))
 async def on_student_info(
     call: CallbackQuery,
     callback_data: StudentCallbackFactory,
@@ -75,8 +78,25 @@ async def on_student_info(
     await call.answer()
 
 
+@router.callback_query(StudentCallbackFactory.filter(F.action == StudentAction.DELETE))
+async def on_delete_student(
+    call: CallbackQuery,
+    callback_data: StudentCallbackFactory,
+    superadmin_repo: SuperAdminRepo,
+    repo: DefaultRepo,
+):
+    student = await repo.get_student_by_id(callback_data.student_id)
+    superadmin_repo.add_unreg_user(student)
+    await superadmin_repo.delete_student(student)
+    await superadmin_repo.session.commit()
+    await call.message.delete()
+    await call.message.answer("Ученик успешно удален")
+
+
 @router.callback_query(
-    CreateRecordofStudent.filter(F.way == WayCreateStudent.FROM_EXCEL)
+    ExcelCallbackFactory.filter(
+        and_(F.action == ExcelAction.IMPORT, F.registry == Registry.STUDENTS)
+    )
 )
 async def on_load_from_excel(call: CallbackQuery, state: FSMContext):
     markup = get_load_from_excel_kb()
@@ -96,7 +116,7 @@ async def read_excel_file(message: Message, bot: Bot, state: FSMContext):
     await delete_last_message(bot, message.from_user.id, mid)
 
     downloaded = await bot.download(message.document.file_id)
-    count, students = parse_registryof_students_excel(downloaded, message.from_user.id)
+    count, students = import_students_excel(downloaded)
 
     markup = get_read_excel_kb()
     await message.answer(
@@ -122,7 +142,7 @@ async def on_load_students(
     count = 0
     for s in students:
         student = factory.load(s, StudentModel)
-        student_exists = await repo.get(Student, student.tg_id)
+        student_exists = await repo.get_student_by_id(student.id)
         if student_exists:
             continue
         superadmin_repo.add_new_student(student)
@@ -160,6 +180,21 @@ async def on_parents_info(
     )
 
     await call.message.edit_text(text, reply_markup=markup)
+    await call.answer()
+
+
+@router.callback_query(
+    ExcelCallbackFactory.filter(
+        and_(F.action == ExcelAction.EXPORT, F.registry == Registry.STUDENTS)
+    )
+)
+async def on_export_excel_students(
+    call: CallbackQuery, superadmin_repo: SuperAdminRepo
+):
+    students = await superadmin_repo.get_all_students()
+    output = get_excel_students(students)
+    file = BufferedInputFile(file=output.read(), filename="Ученики.xlsx")
+    await call.message.answer_document(file)
     await call.answer()
 
 

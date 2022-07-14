@@ -63,7 +63,6 @@ async def on_teacher_info(
 async def page_controller(
     call: CallbackQuery,
     callback_data: TeacherPageController,
-    event_from_user: User,
     state: FSMContext,
     admin_repo: AdminRepo,
     repo: DefaultRepo,

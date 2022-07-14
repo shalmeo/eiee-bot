@@ -1,7 +1,7 @@
-from typing import Iterable, TypeVar
+from typing import Iterable, TypeVar, Sequence
 from uuid import uuid4
 
-from sqlalchemy import select, or_, and_, delete
+from sqlalchemy import select, or_, and_, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import lazyload
 
@@ -21,6 +21,8 @@ from app.services.database.models import (
     Teacher,
     Section,
     UnRegisteredUser,
+    HomeTask,
+    HomeWork,
 )
 
 T = TypeVar("T")
@@ -30,6 +32,13 @@ class SuperAdminRepo:
     def __init__(self, session: AsyncSession, telegram_id: int) -> None:
         self.session = session
         self.telegram_id = telegram_id
+
+    async def get_id(self):
+        stmt = select(Administrator.id).where(
+            Administrator.telegram_id == self.telegram_id
+        )
+
+        return await self.session.scalar(stmt)
 
     async def get_registry(
         self, registry: T, offset: int, limit: int = 9
@@ -154,11 +163,7 @@ class SuperAdminRepo:
         return result.all(), limit
 
     async def add_new_group(self, group: GroupModel) -> Group:
-        admin_id = await self.session.scalar(
-            select(Administrator.id).where(
-                Administrator.telegram_id == self.telegram_id
-            )
-        )
+        admin_id = await self.get_id()
         group = Group(
             uuid=str(uuid4()),
             title=group.title,
@@ -193,12 +198,7 @@ class SuperAdminRepo:
     async def get_students_notin_group(
         self, group_uuid: str
     ) -> Iterable[tuple[int, str, str, str]]:
-        subq = (
-            select(Student.id)
-            .join(Section)
-            .where(Section.group_id == group_uuid)
-            .subquery()
-        )
+        subq = select(Student.id).join(Section).where(Section.group_id == group_uuid)
         result = await self.session.execute(
             select(
                 Student.id, Student.last_name, Student.first_name, Student.patronymic
@@ -241,3 +241,123 @@ class SuperAdminRepo:
         return await self.session.scalar(
             select(Student.telegram_id).where(Student.id == sid).options(lazyload("*"))
         )
+
+    async def delete_teacher(self, teacher: Teacher) -> None:
+        await self.session.delete(teacher)
+
+    async def delete_student(self, student: Student) -> None:
+        await self.session.delete(student)
+
+    async def delete_admin(self, admin: Administrator) -> None:
+        await self.session.delete(admin)
+
+    async def get_home_tasks(
+        self, group_uuid: str, offset: int, limit: int = 5
+    ) -> tuple[Iterable[HomeTask], int]:
+        tasks = await self.session.scalars(
+            select(HomeTask)
+            .join(Group)
+            .where(HomeTask.group_id == group_uuid)
+            .order_by(HomeTask.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+
+        return tasks.all(), limit
+
+    async def get_count_home_tasks(self, group_uuid: str) -> int:
+        count = await self.session.scalar(
+            select(func.count())
+            .select_from(HomeTask)
+            .join(Group)
+            .where(HomeTask.group_id == group_uuid)
+        )
+
+        return count
+
+    async def get_group(self, group_uuid: str) -> Group:
+        stmt = select(Group).where(Group.uuid == group_uuid)
+
+        return await self.session.scalar(stmt)
+
+    async def get_student_home_works(
+        self, student_id: int, task_uuid: str
+    ) -> Iterable[HomeWork]:
+        result = await self.session.scalars(
+            select(HomeWork).where(
+                and_(
+                    HomeWork.home_task_id == task_uuid,
+                    HomeWork.student_id == student_id,
+                )
+            )
+        )
+
+        return result.all()
+
+    async def get_unreg_users(
+        self, offset: int, limit: int = 9
+    ) -> Iterable[UnRegisteredUser]:
+        result = await self.session.scalars(
+            select(UnRegisteredUser)
+            .order_by(UnRegisteredUser.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+
+        return result.all(), limit
+
+    async def get_count_unreg_users(self) -> int:
+        return await self.session.scalar(
+            select(func.count()).select_from(UnRegisteredUser)
+        )
+
+    def add_unreg_user(
+        self, user: Teacher | Student | Administrator
+    ) -> UnRegisteredUser:
+        unreg_user = UnRegisteredUser(
+            telegram_id=user.telegram_id,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            patronymic=user.patronymic,
+            email=user.email,
+            user_name=user.user_name,
+            tel=int(user.tel),
+            timezone=user.timezone,
+        )
+        self.session.add(unreg_user)
+
+        return unreg_user
+
+    async def get_all_admins(self) -> Iterable[Administrator]:
+        result = await self.session.scalars(
+            select(Administrator)
+            .where(Administrator.telegram_id != self.telegram_id)
+            .options(lazyload("*"))
+        )
+        return result.all()
+
+    async def get_all_teachers(self) -> Iterable[Teacher]:
+        result = await self.session.scalars(select(Teacher).options(lazyload("*")))
+        return result.all()
+
+    async def get_all_students(self) -> list[tuple[Student, Sequence[Parent]]]:
+        students = await self.session.scalars(select(Student).options(lazyload("*")))
+        result = []
+        for s in students:
+            parents = await self.session.scalars(
+                select(Parent).join(Family).where(Family.student_id == s.id)
+            )
+            result.append((s, parents.all()))
+
+        return result
+
+    async def get_all_groups(self) -> list[tuple[Group, Sequence[Student]]]:
+        groups = await self.session.scalars(select(Group).options(lazyload("*")))
+        result = []
+        for g in groups:
+            students = await self.session.scalars(
+                select(Student.id).join(Section).where(Section.group_id == g.uuid)
+            )
+            result.append((g, students.all()))
+
+        return result

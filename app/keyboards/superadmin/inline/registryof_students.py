@@ -6,12 +6,19 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.config_reader import Settings
+from app.keyboards.superadmin.excel import ExcelCallbackFactory, ExcelAction
 from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory, Registry
 from app.services.database.models import Student
 
 
+class StudentAction(Enum):
+    INFO = "info"
+    DELETE = "delete"
+
+
 class StudentCallbackFactory(CallbackData, prefix="student"):
     student_id: int
+    action: StudentAction
 
 
 class StudentPageController(CallbackData, prefix="student_controller"):
@@ -43,7 +50,9 @@ def get_registryof_students_kb(
     for s in students:
         builder.button(
             text=f"{s.last_name} {s.first_name}",
-            callback_data=StudentCallbackFactory(student_id=s.id).pack(),
+            callback_data=StudentCallbackFactory(
+                student_id=s.id, action=StudentAction.INFO
+            ).pack(),
         )
 
     builder.adjust(3)
@@ -66,11 +75,23 @@ def get_registryof_students_kb(
                 url=f"https://{config.webhook.host}/student/reg-form?{msg_id=}&{admin_id=}"
             ),
         ),
+    )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="Экспорт EXCEL",
+            callback_data=ExcelCallbackFactory(
+                action=ExcelAction.EXPORT, registry=Registry.STUDENTS
+            ).pack(),
+        ),
         InlineKeyboardButton(
             text="Загрузить из EXCEL",
-            callback_data=CreateRecordofStudent(way=WayCreateStudent.FROM_EXCEL).pack(),
+            callback_data=ExcelCallbackFactory(
+                action=ExcelAction.IMPORT, registry=Registry.STUDENTS
+            ).pack(),
         ),
     )
+
     builder.row(InlineKeyboardButton(text="Назад", callback_data="to_profile"))
 
     return builder.as_markup()
@@ -92,6 +113,14 @@ def get_student_info_kb(
             InlineKeyboardButton(
                 text="Родители",
                 callback_data=ParentCallbackFactory(student_id=student_id).pack(),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Удалить",
+                callback_data=StudentCallbackFactory(
+                    student_id=student_id, action=StudentAction.DELETE
+                ).pack(),
             ),
         ],
         [
@@ -137,7 +166,9 @@ def get_parents_info_kb(sid: int, config: Settings, mid: int) -> InlineKeyboardM
         [
             InlineKeyboardButton(
                 text="Назад",
-                callback_data=StudentCallbackFactory(student_id=sid).pack(),
+                callback_data=StudentCallbackFactory(
+                    student_id=sid, action=StudentAction.INFO
+                ).pack(),
             )
         ],
     ]

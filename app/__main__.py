@@ -35,7 +35,11 @@ async def main():
     dispatcher = configure_dispatcher(storage)
     session_factory = configure_postgres()
     redis = await create_pool(
-        RedisSettings(host=config.redis.host, port=config.redis.port, password=config.redis.password)
+        RedisSettings(
+            host=config.redis.host,
+            port=config.redis.port,
+            password=config.redis.password,
+        )
     )
     app = create_app(dispatcher, bot, config)
 
@@ -83,7 +87,8 @@ async def main():
         await bot.session.close()
 
 
-try:
-    asyncio.run(main())
-except (KeyboardInterrupt, SystemExit):
-    logger.error("Bot stopped!")
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        logger.error("Bot stopped!")

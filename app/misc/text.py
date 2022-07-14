@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeVar, Iterable
 
 from app.misc.date_utils import date_format, datetime_format, utc_to_local
 from app.misc.models import SignUpModel
@@ -110,9 +110,13 @@ def get_home_work_text(home_work: HomeWork, timezone: str) -> str:
 
 
 def get_group_info_text(group: Group):
+    try:
+        teacher_full_name = f"{group.teacher.last_name} {group.teacher.first_name} {group.teacher.patronymic}"
+    except AttributeError:
+        teacher_full_name = "Учитель отсутствует"
     text = [
         "Группа\n\n",
-        f"Учитель: <code>{group.teacher.last_name} {group.teacher.first_name} {group.teacher.patronymic}</code>\n",
+        f"Учитель: <code>{teacher_full_name}</code>\n",
         f"Название: <code>{group.title}</code>\n\n",
         f"Описание:\n{group.description or 'Описание отсутсвует'}",
     ]
@@ -123,7 +127,7 @@ def get_group_info_text(group: Group):
 def get_user_sign_up_text(user: SignUpModel) -> str:
     text = _get_user_info_text(user)
 
-    return text
+    return "".join(text)
 
 
 def get_parent_info_text(parent: Parent) -> str:
@@ -133,5 +137,14 @@ def get_parent_info_text(parent: Parent) -> str:
         f"Отчество: {parent.patronymic}\n",
         f"Телефон: {parent.tel}",
     ]
+
+    return "".join(text)
+
+
+def get_students_list_text(students: Iterable[Student]) -> str:
+    text = ["Действующий список учеников\n\n"]
+
+    for i, s in enumerate(students, 1):
+        text.append(f"{i}. {s.last_name} {s.first_name}\n")
 
     return "".join(text)

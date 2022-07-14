@@ -205,12 +205,19 @@ def _parse_full_name(data: MultiDictProxy) -> tuple[str, str, str]:
 def parse_group_info_data(data: MultiDictProxy) -> GroupModel:
     title = data.get("title", "").strip()
     description = data.get("description", "").strip()
-    teacher_id, _ = data.get("teacher", "").split(" | ")
 
-    return GroupModel(title=title, description=description, teacher_id=int(teacher_id))
+    if data.get("teacher") == "Выберите учителя":
+        teacher_id = None
+    else:
+        teacher_id, _ = data.get("teacher", "").split(" | ")
+        teacher_id = int(teacher_id)
+
+    return GroupModel(title=title, description=description, teacher_id=teacher_id)
 
 
-def parse_user_sign_up_form(data: MultiDictProxy, user: WebAppUser) -> SignUpModel:
+def parse_user_sign_up_form(
+    data: MultiDictProxy, user_id: str | int, username: str
+) -> SignUpModel:
     last_name, first_name, patronymic = _parse_full_name(data)
 
     tel = data.get("tel", "")
@@ -223,8 +230,8 @@ def parse_user_sign_up_form(data: MultiDictProxy, user: WebAppUser) -> SignUpMod
     timezone: str = data.get("timezone", "").strip()
 
     return SignUpModel(
-        telegram_id=user.id,
-        user_name=user.username,
+        telegram_id=user_id,
+        user_name=username,
         last_name=last_name,
         first_name=first_name,
         patronymic=patronymic,

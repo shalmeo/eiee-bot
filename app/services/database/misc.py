@@ -1,7 +1,6 @@
 import datetime
 from contextlib import suppress
 
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -20,7 +19,7 @@ async def add_initial_admin(session_factory: sessionmaker, admin_id: int) -> Non
             tel=0,
             level="None",
             description="None",
-            timezone="None",
+            timezone="UTC+3",
             access_start=datetime.date.today(),
             access_end=datetime.date.today(),
             telegram_id=admin_id,

@@ -4,7 +4,6 @@ from aiogram import Bot
 from arq import run_worker
 from arq.connections import RedisSettings
 
-from app.config_reader import config
 from app.misc.configure import configure_logging
 from app.config_reader import config
 from worker.storage.redis import ArqRedisStorage
@@ -26,14 +25,22 @@ async def shutdown(ctx: dict):
 
 
 class WorkerSettings:
+    functions = [handle_media_group_task, send_message_task]
     on_startup = startup
     on_shutdown = shutdown
-    functions = [handle_media_group_task, send_message_task]
 
 
 def main():
     configure_logging()
-    run_worker(WorkerSettings, redis_settings=RedisSettings(host=config.redis.host, port=config.redis.port, password=config.redis.password))
+    run_worker(
+        WorkerSettings,
+        redis_settings=RedisSettings(
+            host=config.redis.host,
+            port=config.redis.port,
+            password=config.redis.password,
+        ),
+    )
 
 
-main()
+if __name__ == "__main__":
+    main()

@@ -6,6 +6,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.config_reader import Settings
+from app.keyboards.superadmin.excel import ExcelCallbackFactory, ExcelAction
 from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory, Registry
 from app.services.database.models import Teacher
 
@@ -13,6 +14,7 @@ from app.services.database.models import Teacher
 class TeacherAction(Enum):
     INFO = "info"
     CHANGE = "change"
+    DELETE = "delete"
 
 
 class TeacherCallbackFactory(CallbackData, prefix="teacher"):
@@ -71,26 +73,46 @@ def get_registryof_teachers_kb(
                 url=f"https://{config.webhook.host}/teacher/reg-form?msg_id={msg_id}&admin_id={admin_id}"
             ),
         ),
+    )
+
+    builder.row(
+        InlineKeyboardButton(
+            text="Экспорт EXCEL",
+            callback_data=ExcelCallbackFactory(
+                action=ExcelAction.EXPORT, registry=Registry.TEACHERS
+            ).pack(),
+        ),
         InlineKeyboardButton(
             text="Загрузить из EXCEL",
-            callback_data=CreateRecordofTeacher(way=WayCreateTeacher.FROM_EXCEL).pack(),
+            callback_data=ExcelCallbackFactory(
+                action=ExcelAction.IMPORT, registry=Registry.TEACHERS
+            ).pack(),
         ),
     )
+
     builder.row(InlineKeyboardButton(text="Назад", callback_data="to_profile"))
 
     return builder.as_markup()
 
 
 def get_teacher_info_kb(
-    config: Settings, mid: int, admin_id: int
+    config: Settings, mid: int, teacher_id: int
 ) -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton(
                 text="Изменить запись",
                 web_app=WebAppInfo(
-                    url=f"https://{config.webhook.host}/teacher/change-info?mid={mid}&id={admin_id}"
+                    url=f"https://{config.webhook.host}/teacher/change-info?mid={mid}&id={teacher_id}"
                 ),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Удалить",
+                callback_data=TeacherCallbackFactory(
+                    action=TeacherAction.DELETE, teacher_id=teacher_id
+                ).pack(),
             ),
         ],
         [

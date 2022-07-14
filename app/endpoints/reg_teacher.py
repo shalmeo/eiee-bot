@@ -17,7 +17,7 @@ from app.services.database.repositories.superadmin import SuperAdminRepo
 
 
 # GET /administrator/reg-form
-async def teacher_register_view(request: Request):
+async def teacher_register_view(_: Request):
     return FileResponse("html/reg_teacher.html")
 
 
@@ -60,6 +60,6 @@ async def _send_info(
     bot: Bot, user_id: int, teacher: Teacher, msg_id: int, config: Settings
 ) -> None:
     text = get_teacher_info_text(teacher)
-    markup = get_teacher_info_kb(config, msg_id, user_id)
+    markup = get_teacher_info_kb(config, msg_id, teacher.id)
     await delete_last_message(bot, user_id, msg_id)
     await bot.send_message(user_id, text, reply_markup=markup)

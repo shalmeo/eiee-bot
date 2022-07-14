@@ -72,8 +72,16 @@ async def on_home_task_info(
 ):
     home_task = await repo.get_home_task(callback_data.home_task_uuid)
     student = await repo.get_student(event_from_user.id)
+
+    try:
+        teacher_full_name = (
+            f"{home_task.group.teacher.last_name} {home_task.group.teacher.first_name}"
+        )
+    except AttributeError:
+        teacher_full_name = "Учитель отсутствует"
+
     extend_text = [
-        f"Учитель: <code>{home_task.group.teacher.last_name} {home_task.group.teacher.first_name}</code>\n"
+        f"Учитель: <code>{teacher_full_name}</code>\n"
         f"Группа: <code>{home_task.group.title}</code>\n\n"
     ]
     text = get_home_task_text(home_task, student.timezone, "".join(extend_text))

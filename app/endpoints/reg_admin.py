@@ -17,7 +17,7 @@ from app.services.database.repositories.superadmin import SuperAdminRepo
 
 
 # GET /administrator/reg-form
-async def admin_register_view(request: Request):
+async def admin_register_view(_: Request):
     return FileResponse("html/reg_admin.html")
 
 

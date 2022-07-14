@@ -156,7 +156,7 @@
                     msgId: params.mid
                 },
                 dataType: 'json',
-                success: (result) => {
+                success: (_) => {
                     Telegram.WebApp.close();
                 },
                 error: (jqXHR) => {
@@ -180,7 +180,7 @@
                 success: (result) => {
                     setData(result)
                 },
-                error: (jqXHR) => {
+                error: (_) => {
                     alert('Ошибка!')
                 }
             });

@@ -6,20 +6,20 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.config_reader import Settings
-from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory, Registry
+from app.keyboards.superadmin.excel import ExcelCallbackFactory, ExcelAction
+from app.keyboards.superadmin.inline.profile import ProfileCallbackFactory
+from app.keyboards.superadmin.registry import Registry
 from app.services.database.models import Administrator
 
 
-class WayCreateAdmin(Enum):
-    FROM_EXCEL = "create record from excel"
+class AdminAction(Enum):
+    INFO = "info"
+    DELETE = "delete"
 
 
 class AdminCallbackFactory(CallbackData, prefix="admin"):
     admin_id: int
-
-
-class CreateRecordofAdmin(CallbackData, prefix="create_record"):
-    way: WayCreateAdmin
+    action: AdminAction
 
 
 class AdminPageController(CallbackData, prefix="admin_controller"):
@@ -39,7 +39,9 @@ def get_registryof_admins_kb(
     for a in admins:
         builder.button(
             text=f"{a.last_name} {a.first_name}",
-            callback_data=AdminCallbackFactory(admin_id=a.id).pack(),
+            callback_data=AdminCallbackFactory(
+                admin_id=a.id, action=AdminAction.INFO
+            ).pack(),
         )
 
     builder.adjust(3)
@@ -62,11 +64,22 @@ def get_registryof_admins_kb(
                 url=f"https://{config.webhook.host}/administrator/reg-form?msg_id={msg_id}"
             ),
         ),
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text="Экспорт EXCEL",
+            callback_data=ExcelCallbackFactory(
+                action=ExcelAction.EXPORT, registry=Registry.ADMINISTRATORS
+            ).pack(),
+        ),
         InlineKeyboardButton(
             text="Загрузить из EXCEL",
-            callback_data=CreateRecordofAdmin(way=WayCreateAdmin.FROM_EXCEL).pack(),
+            callback_data=ExcelCallbackFactory(
+                action=ExcelAction.IMPORT, registry=Registry.ADMINISTRATORS
+            ).pack(),
         ),
     )
+
     builder.row(InlineKeyboardButton(text="Назад", callback_data="to_profile"))
 
     return builder.as_markup()
@@ -82,6 +95,14 @@ def get_admin_info_kb(
                 web_app=WebAppInfo(
                     url=f"https://{config.webhook.host}/administrator/change-info?mid={mid}&id={admin_id}"
                 ),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Удалить",
+                callback_data=AdminCallbackFactory(
+                    admin_id=admin_id, action=AdminAction.DELETE
+                ).pack(),
             ),
         ],
         [

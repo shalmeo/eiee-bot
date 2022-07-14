@@ -14,7 +14,7 @@ from app.services.database.repositories.superadmin import SuperAdminRepo
 
 
 # GET /group/change-compound
-async def change_compound_view(request: Request):
+async def change_compound_view(_: Request):
     return FileResponse("html/change_compound.html")
 
 

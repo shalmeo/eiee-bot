@@ -100,7 +100,7 @@
 
         MainButton.onClick(() => {
             try {
-                sendRequest("/student/sign-up")
+                sendRequest("/user/sign-up")
             } catch (err) {
                 alert(err)
             }
@@ -112,6 +112,7 @@
                 data: {
                     _auth: initData,
                     mid: params.mid,
+                    user_id: params.user_id,
                     firstName: form.firstName.value,
                     lastName: form.lastName.value,
                     patronymic: form.patronymic.value,
@@ -127,7 +128,7 @@
                     if (jqXHR.status === 400) {
                         alert('Проверьте правильность ввода полей!')
                     } else {
-                        alert('Ошибка!')
+                        alert(jqXHR.status)
                     }
                 }
             });

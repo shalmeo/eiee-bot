@@ -22,6 +22,13 @@ class TeacherRepo:
         self.session = session
         self.telegram_id = teacher_id
 
+    async def get_id(self):
+        teacher_id = await self.session.scalar(
+            select(Teacher.id).where(Teacher.telegram_id == self.telegram_id)
+        )
+
+        return teacher_id
+
     async def get_students_group(self, group_uuid: str) -> Iterable[Student]:
         group: Group = await self.session.get(Group, group_uuid)
         return group.students
@@ -47,9 +54,7 @@ class TeacherRepo:
     async def get_home_tasks(
         self, group_uuid: str, offset: int, limit: int = 5
     ) -> tuple[Iterable[HomeTask], int]:
-        teacher_id = await self.session.scalar(
-            select(Teacher.id).where(Teacher.telegram_id == self.telegram_id)
-        )
+        teacher_id = await self.get_id()
         tasks = await self.session.scalars(
             select(HomeTask)
             .join(Group)
@@ -121,14 +126,14 @@ class TeacherRepo:
         return (await self.session.scalars(stmt)).all()
 
     async def get_count_home_tasks(self, group_uuid: str) -> int:
-        tid = await self.session.scalar(
-            select(Teacher.id).where(Teacher.telegram_id == self.telegram_id)
-        )
+        teacher_id = await self.get_id()
         count = await self.session.scalar(
             select(func.count())
             .select_from(HomeTask)
             .join(Group)
-            .where(and_(HomeTask.group_id == group_uuid, Group.teacher_id == tid))
+            .where(
+                and_(HomeTask.group_id == group_uuid, Group.teacher_id == teacher_id)
+            )
         )
 
         return count

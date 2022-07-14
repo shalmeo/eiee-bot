@@ -140,7 +140,9 @@ class Group(Base, TimeStampMixin):
         default=0,
     )
     teacher_id = Column(
-        BigInteger, ForeignKey("teachers.id", ondelete="CASCADE"), nullable=False
+        BigInteger,
+        ForeignKey("teachers.id", ondelete="SET DEFAULT", onupdate="CASCADE"),
+        default=None,
     )
     title = Column(String)
     description = Column(String)
@@ -254,4 +256,3 @@ class UnRegisteredUser(Base, TimeStampMixin):
     user_name = Column(String)
     tel = Column(BigInteger, unique=True)
     timezone = Column(String)
-    role = Column(String, nullable=False)
