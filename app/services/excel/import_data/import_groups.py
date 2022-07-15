@@ -43,9 +43,6 @@ def _get_group_model(group_info: list) -> tuple[GroupModel, list[int]]:
     teacher_id = group_info[teacher_id_col]
     students = group_info[students_col:]
 
-    if not all(()):
-        raise ExcelCellValidateError()
-
     return (
         GroupModel(
             uuid=unique_id,

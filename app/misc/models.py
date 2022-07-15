@@ -64,7 +64,7 @@ class HomeTaskModel:
 @dataclass
 class GroupModel:
     title: str
-    description: str
+    description: Optional[str]
     teacher_id: Optional[int]
     admin_id: Optional[int] = None
     uuid: Optional[str] = None
