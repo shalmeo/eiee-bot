@@ -1,3 +1,4 @@
+import datetime
 from contextlib import suppress
 
 from aiogram import F, Bot, Router
@@ -85,8 +86,12 @@ async def on_home_task_info(
         f"Группа: <code>{home_task.group.title}</code>\n\n"
     ]
     text = get_home_task_text(home_task, student.timezone, "".join(extend_text))
-
-    markup = get_home_task_info_kb(home_task.uuid, home_task.group.uuid)
+    overdue = datetime.datetime.utcnow() - home_task.deadline <= datetime.timedelta(
+        days=1
+    )
+    markup = get_home_task_info_kb(
+        home_task.uuid, home_task.group.uuid, with_attach=overdue
+    )
     await call.message.edit_text(text, reply_markup=markup)
     await call.answer()
 

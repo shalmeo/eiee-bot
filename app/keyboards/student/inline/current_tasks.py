@@ -18,6 +18,7 @@ class HomeTaskAction(Enum):
 class GroupAction(Enum):
     CUR_TASKS = "cur tasks"
     IN_CHECK = "in check"
+    OVERDUE_HOMETASK = "overdue"
 
 
 class HomeTaskCallbackFactory(CallbackData, prefix="home_task"):
@@ -72,6 +73,15 @@ def get_current_tasks_kb(
 
     builder.row(
         InlineKeyboardButton(
+            text="Д/З ранее",
+            callback_data=GroupCallbackFactory(
+                group_uuid=group_uuid, action=GroupAction.OVERDUE_HOMETASK
+            ).pack(),
+        )
+    )
+
+    builder.row(
+        InlineKeyboardButton(
             text="Назад",
             callback_data=ProfileCallbackFactory(
                 action=ProfileAction.CURRENT_TASKS
@@ -82,22 +92,15 @@ def get_current_tasks_kb(
     return builder.as_markup()
 
 
-def get_home_task_info_kb(home_task_uuid: str, group_uuid: str) -> InlineKeyboardMarkup:
+def get_home_task_info_kb(
+    home_task_uuid: str, group_uuid: str, with_attach=True
+) -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton(
                 text="Посмотреть прикрепленные файлы",
                 callback_data=HomeTaskCallbackFactory(
                     action=HomeTaskAction.ATTACHED_FILES,
-                    home_task_uuid=home_task_uuid,
-                ).pack(),
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="Прикрепить Д/З",
-                callback_data=HomeTaskCallbackFactory(
-                    action=HomeTaskAction.ATTACH_HOME_WORK,
                     home_task_uuid=home_task_uuid,
                 ).pack(),
             )
@@ -111,6 +114,20 @@ def get_home_task_info_kb(home_task_uuid: str, group_uuid: str) -> InlineKeyboar
             )
         ],
     ]
+
+    if with_attach:
+        keyboard.insert(
+            1,
+            [
+                InlineKeyboardButton(
+                    text="Прикрепить Д/З",
+                    callback_data=HomeTaskCallbackFactory(
+                        action=HomeTaskAction.ATTACH_HOME_WORK,
+                        home_task_uuid=home_task_uuid,
+                    ).pack(),
+                )
+            ],
+        )
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

@@ -11,8 +11,6 @@ from app.services.database.models import (
     HomeWorkFile,
     Student,
     HomeTask,
-    Group,
-    Section,
     HomeTaskFile,
 )
 
@@ -73,7 +71,13 @@ class StudentRepo:
     ) -> Iterable[HomeTask]:
         result = await self.session.scalars(
             select(HomeTask)
-            .where(HomeTask.group_id == group_uuid)
+            .where(
+                and_(
+                    HomeTask.group_id == group_uuid,
+                    datetime.datetime.utcnow() - HomeTask.deadline
+                    <= datetime.timedelta(days=1),
+                )
+            )
             .order_by(HomeTask.created_at.desc())
             .offset(offset)
             .limit(limit)
@@ -123,7 +127,11 @@ class StudentRepo:
         return await self.session.scalar(
             select(func.count())
             .select_from(HomeTask)
-            .where(HomeTask.group_id == group_uuid)
+            .where(
+                HomeTask.group_id == group_uuid,
+                datetime.datetime.utcnow() - HomeTask.deadline
+                <= datetime.timedelta(days=1),
+            )
         )
 
     async def get_home_task_files(self, task_uuid: str) -> Iterable[HomeTaskFile]:
@@ -132,3 +140,19 @@ class StudentRepo:
         )
 
         return files.all()
+
+    async def get_overdue_tasks(self, group_uuid: str) -> Iterable[HomeTask]:
+        result = await self.session.scalars(
+            select(HomeTask)
+            .where(
+                and_(
+                    HomeTask.group_id == group_uuid,
+                    datetime.datetime.utcnow() - HomeTask.deadline
+                    > datetime.timedelta(days=1),
+                )
+            )
+            .order_by(HomeTask.created_at.desc())
+            .limit(3)
+        )
+
+        return result.all()

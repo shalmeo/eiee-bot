@@ -145,7 +145,8 @@ async def on_home_work_files(
         for v in voices:
             await call.message.answer_voice(v)
 
-    await call.answer()
+    await call.message.delete()
+    await call.message.answer(call.message.text, reply_markup=call.message.reply_markup)
 
 
 @router.callback_query(
