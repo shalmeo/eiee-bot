@@ -11,7 +11,7 @@ services:
       - .:/usr/src/app/eiee-bot
     command: python -m app
     ports:
-      - 5500:5500
+      - "5500:5500"
     restart: unless-stopped
     networks:
       - botnet
@@ -49,6 +49,10 @@ services:
       context: .
     env_file: .env
     container_name: "eiee-migr"
+    working_dir: "/usr/src/app/eiee-bot"
+    volumes:
+      - ./alembic.ini:/usr/src/app/eiee-bot
+      - ./alembic:/usr/src/app/eiee-bot
     restart: "on-failure"
     command: sh -c "python -m alembic upgrade head"
     depends_on:
