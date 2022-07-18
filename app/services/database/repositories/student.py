@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from typing import Sequence, Iterable
 from uuid import uuid4
 
@@ -12,6 +13,7 @@ from app.services.database.models import (
     Student,
     HomeTask,
     HomeTaskFile,
+    RejectedFile,
 )
 
 
@@ -156,3 +158,10 @@ class StudentRepo:
         )
 
         return result.all()
+
+    async def get_rejected_files(self, work_uuid: uuid.UUID) -> Iterable[RejectedFile]:
+        files = await self.session.scalars(
+            select(RejectedFile).where(RejectedFile.work_uuid == work_uuid)
+        )
+
+        return files.all()

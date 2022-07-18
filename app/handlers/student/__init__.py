@@ -6,6 +6,7 @@ from app.handlers.student import (
     in_check_works,
     accepted_works,
     overdue_tasks,
+    rejected_files,
 )
 
 
@@ -15,6 +16,7 @@ def setup(router: Router) -> None:
         in_check_works,
         accepted_works,
         overdue_tasks,
+        rejected_files,
         profile,
         start,
     ):

@@ -1,3 +1,4 @@
+import uuid
 from typing import Iterable
 
 from sqlalchemy.dialects.postgresql import UUID
@@ -256,3 +257,13 @@ class UnRegisteredUser(Base, TimeStampMixin):
     user_name = Column(String)
     tel = Column(BigInteger, unique=True)
     timezone = Column(String)
+
+
+class RejectedFile(Base, TimeStampMixin):
+    __tablename__ = "rejected_files"
+
+    id = Column(String, primary_key=True)
+    work_uuid = Column(
+        UUID(as_uuid=True), ForeignKey("home_works.uuid", ondelete="CASCADE")
+    )
+    type = Column(String)

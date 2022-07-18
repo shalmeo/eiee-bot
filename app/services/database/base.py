@@ -1,4 +1,4 @@
-from sqlalchemy import TIMESTAMP, Column, func, Date
+from sqlalchemy import TIMESTAMP, Column, Date
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm.decl_api import declarative_mixin
 from sqlalchemy.sql import expression
@@ -30,5 +30,5 @@ class TimeStampMixin:
 class AccessMixin:
     __abstract__ = True
 
-    access_start = Column(Date, nullable=False)
-    access_end = Column(Date, nullable=False)
+    access_start = Column(Date)
+    access_end = Column(Date)

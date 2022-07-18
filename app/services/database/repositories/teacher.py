@@ -1,3 +1,4 @@
+import uuid
 from typing import Iterable
 from uuid import uuid4
 
@@ -14,6 +15,7 @@ from app.services.database.models import (
     Teacher,
     HomeWork,
     HomeWorkFile,
+    RejectedFile,
 )
 
 
@@ -137,3 +139,9 @@ class TeacherRepo:
         )
 
         return count
+
+    def add_reject_file(
+        self, work_uuid: uuid.UUID, file_id: str, file_type: str
+    ) -> None:
+        file = RejectedFile(id=file_id, work_uuid=work_uuid, type=file_type)
+        self.session.add(file)
