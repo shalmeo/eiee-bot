@@ -47,7 +47,7 @@ def get_teacher_info_text(teacher: Teacher, with_creator: bool = False) -> str:
     return "".join(text)
 
 
-def get_student_info_text(student: Student) -> str:
+def get_student_info_text(student: Student, with_creator: bool = False) -> str:
     text = [
         "<b>Ученик</b>\n\n",
         *_get_user_info_text(student),
@@ -55,6 +55,12 @@ def get_student_info_text(student: Student) -> str:
         f"<b>Запись пассивна с:</b> <code>{date_format(student.access_end)}</code>\n"
         f"<b>Часовой пояс:</b> <code>{student.timezone}</code>\n\n",
     ]
+
+    if with_creator:
+        creator_full_name = f"{student.admin.last_name} {student.admin.first_name} {student.admin.patronymic}"
+        text.append(
+            f"<b>ФИО лица создавшего запись:</b>\n<code>{creator_full_name}</code>"
+        )
 
     return "".join(text)
 
@@ -109,7 +115,7 @@ def get_home_work_text(home_work: HomeWork, timezone: str) -> str:
     return "".join(text)
 
 
-def get_group_info_text(group: Group):
+def get_group_info_text(group: Group, with_creator: bool = False):
     try:
         teacher_full_name = f"{group.teacher.last_name} {group.teacher.first_name} {group.teacher.patronymic}"
     except AttributeError:
@@ -118,8 +124,16 @@ def get_group_info_text(group: Group):
         "Группа\n\n",
         f"Учитель: <code>{teacher_full_name}</code>\n",
         f"Название: <code>{group.title}</code>\n\n",
-        f"Описание:\n{group.description or 'Описание отсутсвует'}",
+        f"Описание:\n{group.description or 'Описание отсутсвует'}\n\n",
     ]
+
+    if with_creator:
+        creator_full_name = (
+            f"{group.admin.last_name} {group.admin.first_name} {group.admin.patronymic}"
+        )
+        text.append(
+            f"<b>ФИО лица создавшего запись:</b>\n<code>{creator_full_name}</code>"
+        )
 
     return "".join(text)
 

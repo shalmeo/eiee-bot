@@ -19,7 +19,7 @@ class TeacherPageController(CallbackData, prefix="teacher_controller"):
 
 
 class WayCreateTeacher(Enum):
-    FROM_EXCEL = "create record from excel"
+    FROM_EXCEL = "create record"
 
 
 class CreateRecordofTeacher(CallbackData, prefix="create_teacher"):
@@ -71,9 +71,9 @@ def get_registryof_teachers_kb(
 
 def get_teacher_info_kb() -> InlineKeyboardMarkup:
     keyboard = [
-        [
-            InlineKeyboardButton(text="Изменить запись", callback_data="some"),
-        ],
+        # [
+        #     InlineKeyboardButton(text="Изменить запись", callback_data="some"),
+        # ],
         [
             InlineKeyboardButton(
                 text="Назад",

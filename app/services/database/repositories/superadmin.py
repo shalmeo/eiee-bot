@@ -1,3 +1,4 @@
+import uuid
 from typing import Iterable, TypeVar, Sequence
 from uuid import uuid4
 
@@ -361,3 +362,6 @@ class SuperAdminRepo:
             result.append((g, students.all()))
 
         return result
+
+    async def delete_group(self, group_uuid: str) -> None:
+        await self.session.execute(delete(Group).where(Group.uuid == group_uuid))

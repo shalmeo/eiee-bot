@@ -96,25 +96,9 @@ def get_registryof_teachers_kb(
 
 
 def get_teacher_info_kb(
-    config: Settings, mid: int, teacher_id: int
+    config: Settings, mid: int, teacher_id: int, is_superadmin: bool = True
 ) -> InlineKeyboardMarkup:
     keyboard = [
-        [
-            InlineKeyboardButton(
-                text="Изменить запись",
-                web_app=WebAppInfo(
-                    url=f"https://{config.webhook.host}/teacher/change-info?mid={mid}&id={teacher_id}"
-                ),
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="Удалить",
-                callback_data=TeacherCallbackFactory(
-                    action=TeacherAction.DELETE, teacher_id=teacher_id
-                ).pack(),
-            ),
-        ],
         [
             InlineKeyboardButton(
                 text="Назад",
@@ -122,6 +106,26 @@ def get_teacher_info_kb(
             )
         ],
     ]
+
+    if is_superadmin:
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    text="Изменить запись",
+                    web_app=WebAppInfo(
+                        url=f"https://{config.webhook.host}/teacher/change-info?mid={mid}&id={teacher_id}"
+                    ),
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Удалить",
+                    callback_data=TeacherCallbackFactory(
+                        action=TeacherAction.DELETE, teacher_id=teacher_id
+                    ).pack(),
+                ),
+            ],
+        ] + keyboard
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

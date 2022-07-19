@@ -5,6 +5,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.config_reader import Settings
+from app.keyboards.admin.inline.profile import ProfileCallbackFactory, Registry
 from app.services.database.models import Group
 
 
@@ -57,3 +58,16 @@ def get_registryof_groups_kb(
     builder.row(InlineKeyboardButton(text="Назад", callback_data="to_profile"))
 
     return builder.as_markup()
+
+
+def get_group_info_kb() -> InlineKeyboardMarkup:
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=ProfileCallbackFactory(registry=Registry.GROUPS).pack(),
+            )
+        ],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

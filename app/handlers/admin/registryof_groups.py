@@ -16,6 +16,7 @@ from app.keyboards.admin.inline.registryof_groups import (
     GroupPageController,
     get_registryof_groups_kb,
     GroupCallbackFactory,
+    get_group_info_kb,
 )
 from app.services.database.repositories.default import DefaultRepo
 
@@ -54,11 +55,10 @@ async def on_group_info(
     call: CallbackQuery,
     callback_data: GroupCallbackFactory,
     repo: DefaultRepo,
-    config: Settings,
 ):
     group = await repo.get(Group, callback_data.group_uuid)
     text = get_group_info_text(group)
-    markup = get_create_group_kb(group, config, call.message.message_id)
+    markup = get_group_info_kb()
     await call.message.edit_text(text, reply_markup=markup)
     await call.answer()
 

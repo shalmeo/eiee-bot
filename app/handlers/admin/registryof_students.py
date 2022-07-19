@@ -16,9 +16,9 @@ from app.keyboards.admin.inline.registryof_students import (
     StudentCallbackFactory,
     StudentPageController,
     get_registryof_students_kb,
+    get_student_info_kb,
 )
 from app.keyboards.superadmin.inline.registryof_students import (
-    get_student_info_kb,
     ParentCallbackFactory,
     get_parents_info_kb,
 )
@@ -61,7 +61,7 @@ async def on_student_info(
 ):
     student = await repo.get(Student, callback_data.student_id)
     text = get_student_info_text(student)
-    markup = get_student_info_kb(config, call.message.message_id, student.id)
+    markup = get_student_info_kb()
     await call.message.edit_text(text, reply_markup=markup)
     await call.answer()
 

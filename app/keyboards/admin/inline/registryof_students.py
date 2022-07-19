@@ -71,12 +71,9 @@ def get_registryof_students_kb(
 
 def get_student_info_kb() -> InlineKeyboardMarkup:
     keyboard = [
-        [
-            InlineKeyboardButton(text="Изменить запись", callback_data="some"),
-        ],
-        [
-            InlineKeyboardButton(text="Родители", callback_data="some"),
-        ],
+        # [
+        #     InlineKeyboardButton(text="Родители", callback_data="some"),
+        # ],
         [
             InlineKeyboardButton(
                 text="Назад",

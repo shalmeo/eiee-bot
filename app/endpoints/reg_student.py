@@ -69,6 +69,8 @@ async def _send_info(
     bot: Bot, user_id: int, student: Student, msg_id: int, config: Settings
 ):
     text = get_student_info_text(student)
-    markup = get_student_info_kb(config, msg_id, student.id)
+    markup = get_student_info_kb(
+        config, msg_id, student.id, user_id == config.bot_admin
+    )
     await delete_last_message(bot, user_id, msg_id)
     await bot.send_message(user_id, text, reply_markup=markup)

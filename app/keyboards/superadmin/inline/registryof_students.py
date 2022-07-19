@@ -98,31 +98,9 @@ def get_registryof_students_kb(
 
 
 def get_student_info_kb(
-    config: Settings, mid: int, student_id: int
+    config: Settings, mid: int, student_id: int, is_superadmin: bool = True
 ) -> InlineKeyboardMarkup:
     keyboard = [
-        [
-            InlineKeyboardButton(
-                text="Изменить запись",
-                web_app=WebAppInfo(
-                    url=f"https://{config.webhook.host}/student/change-info?mid={mid}&id={student_id}"
-                ),
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="Родители",
-                callback_data=ParentCallbackFactory(student_id=student_id).pack(),
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="Удалить",
-                callback_data=StudentCallbackFactory(
-                    student_id=student_id, action=StudentAction.DELETE
-                ).pack(),
-            ),
-        ],
         [
             InlineKeyboardButton(
                 text="Назад",
@@ -130,6 +108,32 @@ def get_student_info_kb(
             )
         ],
     ]
+
+    if is_superadmin:
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    text="Изменить запись",
+                    web_app=WebAppInfo(
+                        url=f"https://{config.webhook.host}/student/change-info?mid={mid}&id={student_id}"
+                    ),
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Родители",
+                    callback_data=ParentCallbackFactory(student_id=student_id).pack(),
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Удалить",
+                    callback_data=StudentCallbackFactory(
+                        student_id=student_id, action=StudentAction.DELETE
+                    ).pack(),
+                ),
+            ],
+        ] + keyboard
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

@@ -18,6 +18,7 @@ class WayCreateGroup(Enum):
 class GroupAction(Enum):
     INFO = "info"
     ALL_HOME_TASK = "all_ht"
+    DELETE = "del"
 
 
 class GroupCallbackFactory(CallbackData, prefix="group"):
@@ -116,6 +117,14 @@ def get_create_group_kb(
                 text="Реестр Д/З",
                 callback_data=GroupCallbackFactory(
                     group_uuid=group.uuid, action=GroupAction.ALL_HOME_TASK
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Удалить",
+                callback_data=GroupCallbackFactory(
+                    group_uuid=group.uuid, action=GroupAction.DELETE
                 ).pack(),
             )
         ],

@@ -6,7 +6,7 @@ import dataclass_factory
 from aiogram import Bot, F, Router
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, Message, BufferedInputFile
+from aiogram.types import CallbackQuery, Message, BufferedInputFile, User
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -66,11 +66,13 @@ async def on_registryof_students(
 async def on_student_info(
     call: CallbackQuery,
     callback_data: StudentCallbackFactory,
+    event_from_user: User,
     repo: DefaultRepo,
     config: Settings,
 ):
     student = await repo.get(Student, callback_data.student_id)
-    text = get_student_info_text(student)
+    with_creator = student.admin.telegram_id != event_from_user.id
+    text = get_student_info_text(student, with_creator=with_creator)
     markup = get_student_info_kb(
         config, call.message.message_id, callback_data.student_id
     )

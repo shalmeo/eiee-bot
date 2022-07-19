@@ -5,7 +5,7 @@ import dataclass_factory
 from aiogram import F, Router, Bot
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, BufferedInputFile, Message
+from aiogram.types import CallbackQuery, BufferedInputFile, Message, User
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -77,11 +77,13 @@ async def on_registryof_groups(
 async def on_group_info(
     call: CallbackQuery,
     callback_data: GroupCallbackFactory,
+    event_from_user: User,
     repo: DefaultRepo,
     config: Settings,
 ):
     group = await repo.get(Group, callback_data.group_uuid)
-    text = get_group_info_text(group)
+    with_creator = group.admin.telegram_id != event_from_user.id
+    text = get_group_info_text(group, with_creator)
     markup = get_create_group_kb(group, config, call.message.message_id)
     await call.message.edit_text(text, reply_markup=markup)
     await call.answer()
@@ -293,6 +295,18 @@ async def on_load_teachers(
         "Если число обнаруженных записей отличается от всего добавленных записей, "
         "проверьте что в файле нет записей которые есть в базе"
     )
+
+
+@router.callback_query(GroupCallbackFactory.filter(F.action == GroupAction.DELETE))
+async def on_delete_group(
+    call: CallbackQuery,
+    callback_data: GroupCallbackFactory,
+    superadmin_repo: SuperAdminRepo,
+):
+    await superadmin_repo.delete_group(callback_data.group_uuid)
+    await superadmin_repo.session.commit()
+    await call.message.delete()
+    await call.message.answer("Группа успешно удалена")
 
 
 @router.callback_query(GroupPageController.filter())
